@@ -1,2 +1,14 @@
-# sample-controller
-A simple sample controller for Knative controllers.
+# Knative Sample Controller
+
+[![GoDoc](https://godoc.org/github.com/knative/sample-controller?status.svg)](https://godoc.org/github.com/knative/sample-controller)
+[![Go Report Card](https://goreportcard.com/badge/knative/sample-controller)](https://goreportcard.com/report/knative/sample-controller)
+
+Knative `sample-controller` defines a few simple resources that are validated by
+webhook and managed by a controller to demonstrate the canonical style in which
+Knative writes controllers.
+
+To learn more about Knative, please visit our
+[Knative docs](https://github.com/knative/docs) repository.
+
+If you are interested in contributing, see [CONTRIBUTING.md](./CONTRIBUTING.md)
+and [DEVELOPMENT.md](./DEVELOPMENT.md).
