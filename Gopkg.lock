@@ -295,7 +295,8 @@
   revision = "f2b4162afba35581b6d4a50d3b8f34e33c144682"
 
 [[projects]]
-  digest = "1:b70b258562f5326dc1034c6555d1ffa7890c574217f3eb93901bfefe15f391ac"
+  branch = "master"
+  digest = "1:10077cdc8ae2792754b4d3261342017d063935150a7f172845d799496f228d39"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -325,7 +326,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "d8a2a739d6b359a325ee6bb1dcbee13ecfee8dcc"
+  revision = "8b0108fa0a917848a8c8a121701297085cb30bbf"
 
 [[projects]]
   branch = "master"
@@ -835,7 +836,7 @@
   version = "kubernetes-1.12.6"
 
 [[projects]]
-  digest = "1:f3f8478ea4b0be04b07154be8f5763b5c98f5a66a31738aab585f2656162d4a1"
+  digest = "1:3ca7df0bbf551a81b152726b5e939a757c193d92999e8cc68059f565b1759151"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -950,11 +951,9 @@
     "pkg/apis/clientauthentication/v1beta1",
     "pkg/version",
     "plugin/pkg/client/auth/exec",
-    "plugin/pkg/client/auth/gcp",
     "rest",
     "rest/watch",
     "testing",
-    "third_party/forked/golang/template",
     "tools/auth",
     "tools/cache",
     "tools/clientcmd",
@@ -972,7 +971,6 @@
     "util/flowcontrol",
     "util/homedir",
     "util/integer",
-    "util/jsonpath",
     "util/retry",
     "util/workqueue",
   ]

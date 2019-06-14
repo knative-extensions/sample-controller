@@ -38,8 +38,7 @@ required = [
 
 [[override]]
   name = "github.com/knative/pkg"
-  # HEAD as of 2019-06-06
-  revision = "d8a2a739d6b359a325ee6bb1dcbee13ecfee8dcc"
+  branch = "master"
 
 [[override]]
   name = "google.golang.org/genproto"
