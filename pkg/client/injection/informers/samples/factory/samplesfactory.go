@@ -23,6 +23,7 @@ import (
 
 	controller "github.com/knative/pkg/controller"
 	injection "github.com/knative/pkg/injection"
+	logging "github.com/knative/pkg/logging"
 	externalversions "github.com/knative/sample-controller/pkg/client/informers/externalversions"
 	client "github.com/knative/sample-controller/pkg/client/injection/client"
 )
@@ -31,7 +32,7 @@ func init() {
 	injection.Default.RegisterInformerFactory(withInformerFactory)
 }
 
-// key is used as the key for associating information with a context.Context.
+// Key is used as the key for associating information with a context.Context.
 type Key struct{}
 
 func withInformerFactory(ctx context.Context) context.Context {
@@ -44,7 +45,8 @@ func withInformerFactory(ctx context.Context) context.Context {
 func Get(ctx context.Context) externalversions.SharedInformerFactory {
 	untyped := ctx.Value(Key{})
 	if untyped == nil {
-		return nil
+		logging.FromContext(ctx).Fatalf(
+			"Unable to fetch %T from context.", (externalversions.SharedInformerFactory)(nil))
 	}
 	return untyped.(externalversions.SharedInformerFactory)
 }
