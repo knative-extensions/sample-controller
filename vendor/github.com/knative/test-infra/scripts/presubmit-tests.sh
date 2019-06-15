@@ -19,6 +19,11 @@
 
 source $(dirname ${BASH_SOURCE})/library.sh
 
+# Custom configuration of presubmit tests
+readonly DISABLE_MD_LINTING=${DISABLE_MD_LINTING:-0}
+readonly DISABLE_MD_LINK_CHECK=${DISABLE_MD_LINK_CHECK:-0}
+readonly PRESUBMIT_TEST_FAIL_FAST=${PRESUBMIT_TEST_FAIL_FAST:-0}
+
 # Extensions or file patterns that don't require presubmit tests.
 readonly NO_PRESUBMIT_FILES=(\.png \.gitignore \.gitattributes ^OWNERS ^OWNERS_ALIASES ^AUTHORS)
 
@@ -38,7 +43,7 @@ IS_DOCUMENTATION_PR=0
 # Returns true if PR only contains the given file regexes.
 # Parameters: $1 - file regexes, space separated.
 function pr_only_contains() {
-  [[ -z "$(echo "${CHANGED_FILES}" | grep -v \(${1// /\\|}\)$))" ]]
+  [[ -z "$(echo "${CHANGED_FILES}" | grep -v "\(${1// /\\|}\)$")" ]]
 }
 
 # List changed files in the current PR.
@@ -59,7 +64,10 @@ function initialize_environment() {
     echo -e "Changed files in commit ${PULL_PULL_SHA}:\n${CHANGED_FILES}"
     local no_presubmit_files="${NO_PRESUBMIT_FILES[*]}"
     pr_only_contains "${no_presubmit_files}" && IS_PRESUBMIT_EXEMPT_PR=1
-    pr_only_contains "\.md ${no_presubmit_files}" && IS_DOCUMENTATION_PR=1
+    # A documentation PR must contain markdown files
+    if pr_only_contains "\.md ${no_presubmit_files}"; then
+      [[ -n "$(echo "${CHANGED_FILES}" | grep '\.md')" ]] && IS_DOCUMENTATION_PR=1
+    fi
   else
     header "NO CHANGED FILES REPORTED, ASSUMING IT'S AN ERROR AND RUNNING TESTS ANYWAY"
   fi
@@ -96,30 +104,48 @@ function run_build_tests() {
     fi
   fi
   # Don't run post-build tests if pre/build tests failed
-  if function_exists post_build_tests; then
+  if (( ! failed )) && function_exists post_build_tests; then
     post_build_tests || failed=1
   fi
   results_banner "Build" ${failed}
   return ${failed}
 }
 
-# Default build test runner that:
-# * lint and link check markdown files
-# * `go build` on the entire repo
-# * run `/hack/verify-codegen.sh` (if it exists)
-# * check licenses in `/cmd` (if it exists)
-function default_build_test_runner() {
+# Perform markdown build tests if necessary, unless disabled.
+function markdown_build_tests() {
+  (( DISABLE_MD_LINTING && DISABLE_MD_LINK_CHECK )) && return 0
+  # Get changed markdown files (ignore /vendor and deleted files)
+  local mdfiles=""
+  for file in $(echo "${CHANGED_FILES}" | grep \.md$ | grep -v ^vendor/); do
+    [[ -f "${file}" ]] && mdfiles="${mdfiles} ${file}"
+  done
+  [[ -z "${mdfiles}" ]] && return 0
   local failed=0
-  # Ignore markdown files in /vendor
-  local mdfiles="$(echo "${CHANGED_FILES}" | grep \.md$ | grep -v ^vendor/)"
-  if [[ -n "${mdfiles}" ]]; then
+  if (( ! DISABLE_MD_LINTING )); then
     subheader "Linting the markdown files"
     lint_markdown ${mdfiles} || failed=1
+  fi
+  if (( ! DISABLE_MD_LINK_CHECK )); then
     subheader "Checking links in the markdown files"
     check_links_in_markdown ${mdfiles} || failed=1
   fi
+  return ${failed}
+}
+
+# Default build test runner that:
+# * check markdown files
+# * `go build` on the entire repo
+# * run `/hack/verify-codegen.sh` (if it exists)
+# * check licenses in all go packages
+function default_build_test_runner() {
+  local failed=0
+  # Perform markdown build checks first
+  markdown_build_tests || failed=1
   # For documentation PRs, just check the md files
   (( IS_DOCUMENTATION_PR )) && return ${failed}
+  # Skip build test if there is no go code
+  local go_pkg_dirs="$(go list ./...)"
+  [[ -z "${go_pkg_dirs}" ]] && return ${failed}
   # Ensure all the code builds
   subheader "Checking that go code builds"
   go build -v ./... || failed=1
@@ -134,10 +160,8 @@ function default_build_test_runner() {
     ./hack/verify-codegen.sh || failed=1
   fi
   # Check that we don't have any forbidden licenses in our images.
-  if [[ -d ./cmd ]]; then
-    subheader "Checking for forbidden licenses"
-    check_licenses ./cmd/* || failed=1
-  fi
+  subheader "Checking for forbidden licenses"
+  check_licenses ${go_pkg_dirs} || failed=1
   return ${failed}
 }
 
@@ -145,6 +169,10 @@ function default_build_test_runner() {
 # unit test runner.
 function run_unit_tests() {
   (( ! RUN_UNIT_TESTS )) && return 0
+  if (( IS_DOCUMENTATION_PR )); then
+    header "Documentation only PR, skipping unit tests"
+    return 0
+  fi
   header "Running unit tests"
   local failed=0
   # Run pre-unit tests, if any
@@ -160,7 +188,7 @@ function run_unit_tests() {
     fi
   fi
   # Don't run post-unit tests if pre/unit tests failed
-  if function_exists post_unit_tests; then
+  if (( ! failed )) && function_exists post_unit_tests; then
     post_unit_tests || failed=1
   fi
   results_banner "Unit" ${failed}
@@ -177,7 +205,10 @@ function default_unit_test_runner() {
 function run_integration_tests() {
   # Don't run integration tests if not requested OR on documentation PRs
   (( ! RUN_INTEGRATION_TESTS )) && return 0
-  (( IS_DOCUMENTATION_PR )) && return 0
+  if (( IS_DOCUMENTATION_PR )); then
+    header "Documentation only PR, skipping integration tests"
+    return 0
+  fi
   header "Running integration tests"
   local failed=0
   # Run pre-integration tests, if any
@@ -236,7 +267,7 @@ function main() {
     echo ">> gcloud SDK version"
     gcloud version
     echo ">> kubectl version"
-    kubectl version
+    kubectl version --client
     echo ">> go version"
     go version
     echo ">> git version"
@@ -291,12 +322,23 @@ function main() {
     if (( RUN_BUILD_TESTS || RUN_UNIT_TESTS || RUN_INTEGRATION_TESTS )); then
       abort "--run-test must be used alone"
     fi
+    # If this is a presubmit run, but a documentation-only PR, don't run the test
+    if (( IS_PRESUBMIT && IS_DOCUMENTATION_PR )); then
+      header "Documentation only PR, skipping running custom test"
+      exit 0
+    fi
     ${TEST_TO_RUN} || failed=1
   fi
 
   run_build_tests || failed=1
-  run_unit_tests || failed=1
-  run_integration_tests || failed=1
+  # If PRESUBMIT_TEST_FAIL_FAST is set to true, don't run unit tests if build tests failed
+  if (( ! PRESUBMIT_TEST_FAIL_FAST )) || (( ! failed )); then
+    run_unit_tests || failed=1
+  fi
+  # If PRESUBMIT_TEST_FAIL_FAST is set to true, don't run integration tests if build/unit tests failed
+  if (( ! PRESUBMIT_TEST_FAIL_FAST )) || (( ! failed )); then
+    run_integration_tests || failed=1
+  fi
 
   exit ${failed}
 }
