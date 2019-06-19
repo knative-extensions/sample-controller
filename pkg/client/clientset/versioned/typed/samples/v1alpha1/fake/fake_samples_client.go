@@ -19,9 +19,9 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/knative/sample-controller/pkg/client/clientset/versioned/typed/samples/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
+	v1alpha1 "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1alpha1"
 )
 
 type FakeSamplesV1alpha1 struct {

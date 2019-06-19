@@ -18,7 +18,7 @@ package main
 
 import (
 	// The set of controllers this controller process runs.
-	"github.com/knative/sample-controller/pkg/reconciler/addressableservice"
+	"knative.dev/sample-controller/pkg/reconciler/addressableservice"
 
 	// This defines the shared main for injected controllers.
 	"github.com/knative/pkg/injection/sharedmain"
