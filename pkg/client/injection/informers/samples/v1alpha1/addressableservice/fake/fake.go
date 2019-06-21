@@ -23,8 +23,8 @@ import (
 
 	controller "github.com/knative/pkg/controller"
 	injection "github.com/knative/pkg/injection"
-	fake "github.com/knative/sample-controller/pkg/client/injection/informers/samples/factory/fake"
-	addressableservice "github.com/knative/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
+	fake "knative.dev/sample-controller/pkg/client/injection/informers/samples/factory/fake"
+	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
 )
 
 var Get = addressableservice.Get

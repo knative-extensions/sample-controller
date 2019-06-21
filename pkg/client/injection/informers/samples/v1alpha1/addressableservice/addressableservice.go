@@ -24,8 +24,8 @@ import (
 	controller "github.com/knative/pkg/controller"
 	injection "github.com/knative/pkg/injection"
 	logging "github.com/knative/pkg/logging"
-	v1alpha1 "github.com/knative/sample-controller/pkg/client/informers/externalversions/samples/v1alpha1"
-	factory "github.com/knative/sample-controller/pkg/client/injection/informers/samples/factory"
+	v1alpha1 "knative.dev/sample-controller/pkg/client/informers/externalversions/samples/v1alpha1"
+	factory "knative.dev/sample-controller/pkg/client/injection/informers/samples/factory"
 )
 
 func init() {

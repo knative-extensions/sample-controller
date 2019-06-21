@@ -34,7 +34,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/knative/sample-controller/pkg/apis/samples/v1alpha1"
+	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
 
 const (
