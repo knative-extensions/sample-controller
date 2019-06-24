@@ -26,9 +26,6 @@ import (
 	"github.com/knative/pkg/controller"
 	"github.com/knative/pkg/logging"
 	"github.com/knative/pkg/tracker"
-	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
-	clientset "knative.dev/sample-controller/pkg/client/clientset/versioned"
-	listers "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -36,6 +33,9 @@ import (
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
+	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	clientset "knative.dev/sample-controller/pkg/client/clientset/versioned"
+	listers "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
 )
 
 // Reconciler implements controller.Reconciler for AddressableService resources.
