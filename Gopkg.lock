@@ -296,7 +296,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:74011ee8ad886225d91925bcaa1e3b692d183713e9fff3411f31920fd37b395d"
+  digest = "1:67193068362deb175ea8d65e70af119590ecb8d66b8a3d97a076f8358aa69540"
   name = "github.com/knative/pkg"
   packages = [
     "apis",
@@ -326,18 +326,18 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "d90a9bc97dde7b1acc9f0b5b38916cb0914b1538"
+  revision = "9f8e0692b73643ba8b3b9f1b6f4aaae939e48fd7"
 
 [[projects]]
   branch = "master"
-  digest = "1:c7d64626aaae56130f52823c067b6cb02b0fe3b3d63f5c1886066a056ca0648f"
+  digest = "1:cdd3c19a395031148cd55f5aa770a77c0c38429cd109563f99e9567c11f7ef04"
   name = "github.com/knative/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "298c0aa79f823222eeab8f4775fad525e72dbb0f"
+  revision = "1f95ba1bd8c59c1f4e2bb7148afb899d23d748d1"
 
 [[projects]]
   digest = "1:56dbf15e091bf7926cb33a57cb6bdfc658fc6d3498d2f76f10a97ce7856f1fde"
@@ -1038,6 +1038,33 @@
   pruneopts = "NUT"
   revision = "a01b7d5d6c2258c80a4a10070f3dee9cd575d9c7"
 
+[[projects]]
+  branch = "master"
+  digest = "1:c143c02b0a2e4b73000da6d8870d006f3e20c8bfa55b3706f1fa3426df1ecea2"
+  name = "knative.dev/sample-controller"
+  packages = [
+    "pkg/apis/samples",
+    "pkg/apis/samples/v1alpha1",
+    "pkg/client/clientset/versioned",
+    "pkg/client/clientset/versioned/fake",
+    "pkg/client/clientset/versioned/scheme",
+    "pkg/client/clientset/versioned/typed/samples/v1alpha1",
+    "pkg/client/clientset/versioned/typed/samples/v1alpha1/fake",
+    "pkg/client/informers/externalversions",
+    "pkg/client/informers/externalversions/internalinterfaces",
+    "pkg/client/informers/externalversions/samples",
+    "pkg/client/informers/externalversions/samples/v1alpha1",
+    "pkg/client/injection/client",
+    "pkg/client/injection/client/fake",
+    "pkg/client/injection/informers/samples/factory",
+    "pkg/client/injection/informers/samples/factory/fake",
+    "pkg/client/injection/informers/samples/v1alpha1/addressableservice",
+    "pkg/client/listers/samples/v1alpha1",
+    "pkg/reconciler/addressableservice",
+  ]
+  pruneopts = "NUT"
+  revision = "5d93889ea8e5609dcc24e9b8e2d0f04f57d5f27c"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -1088,6 +1115,24 @@
     "k8s.io/code-generator/cmd/defaulter-gen",
     "k8s.io/code-generator/cmd/informer-gen",
     "k8s.io/code-generator/cmd/lister-gen",
+    "knative.dev/sample-controller/pkg/apis/samples",
+    "knative.dev/sample-controller/pkg/apis/samples/v1alpha1",
+    "knative.dev/sample-controller/pkg/client/clientset/versioned",
+    "knative.dev/sample-controller/pkg/client/clientset/versioned/fake",
+    "knative.dev/sample-controller/pkg/client/clientset/versioned/scheme",
+    "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1alpha1",
+    "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1alpha1/fake",
+    "knative.dev/sample-controller/pkg/client/informers/externalversions",
+    "knative.dev/sample-controller/pkg/client/informers/externalversions/internalinterfaces",
+    "knative.dev/sample-controller/pkg/client/informers/externalversions/samples",
+    "knative.dev/sample-controller/pkg/client/informers/externalversions/samples/v1alpha1",
+    "knative.dev/sample-controller/pkg/client/injection/client",
+    "knative.dev/sample-controller/pkg/client/injection/client/fake",
+    "knative.dev/sample-controller/pkg/client/injection/informers/samples/factory",
+    "knative.dev/sample-controller/pkg/client/injection/informers/samples/factory/fake",
+    "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice",
+    "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1",
+    "knative.dev/sample-controller/pkg/reconciler/addressableservice",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
