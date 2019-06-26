@@ -296,40 +296,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:74011ee8ad886225d91925bcaa1e3b692d183713e9fff3411f31920fd37b395d"
-  name = "github.com/knative/pkg"
-  packages = [
-    "apis",
-    "apis/duck",
-    "apis/duck/v1beta1",
-    "changeset",
-    "codegen/cmd/injection-gen",
-    "codegen/cmd/injection-gen/args",
-    "codegen/cmd/injection-gen/generators",
-    "configmap",
-    "controller",
-    "injection",
-    "injection/clients/kubeclient",
-    "injection/informers/kubeinformers/corev1/service",
-    "injection/informers/kubeinformers/factory",
-    "injection/sharedmain",
-    "kmeta",
-    "kmp",
-    "logging",
-    "logging/logkey",
-    "metrics",
-    "metrics/metricskey",
-    "signals",
-    "system",
-    "tracker",
-    "version",
-    "webhook",
-  ]
-  pruneopts = "T"
-  revision = "d90a9bc97dde7b1acc9f0b5b38916cb0914b1538"
-
-[[projects]]
-  branch = "master"
   digest = "1:c7d64626aaae56130f52823c067b6cb02b0fe3b3d63f5c1886066a056ca0648f"
   name = "github.com/knative/test-infra"
   packages = [
@@ -1038,26 +1004,44 @@
   pruneopts = "NUT"
   revision = "a01b7d5d6c2258c80a4a10070f3dee9cd575d9c7"
 
+[[projects]]
+  branch = "master"
+  digest = "1:489ef6bdf39ea8e447cfb8a5667bf9c2b3d1afdfe5e7d4645dff8cd833c6274f"
+  name = "knative.dev/pkg"
+  packages = [
+    "apis",
+    "apis/duck",
+    "apis/duck/v1beta1",
+    "changeset",
+    "codegen/cmd/injection-gen",
+    "codegen/cmd/injection-gen/args",
+    "codegen/cmd/injection-gen/generators",
+    "configmap",
+    "controller",
+    "injection",
+    "injection/clients/kubeclient",
+    "injection/informers/kubeinformers/corev1/service",
+    "injection/informers/kubeinformers/factory",
+    "injection/sharedmain",
+    "kmeta",
+    "kmp",
+    "logging",
+    "logging/logkey",
+    "metrics",
+    "metrics/metricskey",
+    "signals",
+    "system",
+    "tracker",
+    "version",
+    "webhook",
+  ]
+  pruneopts = "T"
+  revision = "222dd25986d91c12d54f6ac7758251f005053b8f"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/knative/pkg/apis",
-    "github.com/knative/pkg/apis/duck/v1beta1",
-    "github.com/knative/pkg/codegen/cmd/injection-gen",
-    "github.com/knative/pkg/configmap",
-    "github.com/knative/pkg/controller",
-    "github.com/knative/pkg/injection",
-    "github.com/knative/pkg/injection/informers/kubeinformers/corev1/service",
-    "github.com/knative/pkg/injection/sharedmain",
-    "github.com/knative/pkg/kmeta",
-    "github.com/knative/pkg/logging",
-    "github.com/knative/pkg/logging/logkey",
-    "github.com/knative/pkg/signals",
-    "github.com/knative/pkg/system",
-    "github.com/knative/pkg/tracker",
-    "github.com/knative/pkg/version",
-    "github.com/knative/pkg/webhook",
     "github.com/knative/test-infra/scripts",
     "github.com/knative/test-infra/tools/dep-collector",
     "go.uber.org/zap",
@@ -1088,6 +1072,22 @@
     "k8s.io/code-generator/cmd/defaulter-gen",
     "k8s.io/code-generator/cmd/informer-gen",
     "k8s.io/code-generator/cmd/lister-gen",
+    "knative.dev/pkg/apis",
+    "knative.dev/pkg/apis/duck/v1beta1",
+    "knative.dev/pkg/codegen/cmd/injection-gen",
+    "knative.dev/pkg/configmap",
+    "knative.dev/pkg/controller",
+    "knative.dev/pkg/injection",
+    "knative.dev/pkg/injection/informers/kubeinformers/corev1/service",
+    "knative.dev/pkg/injection/sharedmain",
+    "knative.dev/pkg/kmeta",
+    "knative.dev/pkg/logging",
+    "knative.dev/pkg/logging/logkey",
+    "knative.dev/pkg/signals",
+    "knative.dev/pkg/system",
+    "knative.dev/pkg/tracker",
+    "knative.dev/pkg/version",
+    "knative.dev/pkg/webhook",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -21,9 +21,9 @@ package addressableservice
 import (
 	"context"
 
-	controller "github.com/knative/pkg/controller"
-	injection "github.com/knative/pkg/injection"
-	logging "github.com/knative/pkg/logging"
+	controller "knative.dev/pkg/controller"
+	injection "knative.dev/pkg/injection"
+	logging "knative.dev/pkg/logging"
 	v1alpha1 "knative.dev/sample-controller/pkg/client/informers/externalversions/samples/v1alpha1"
 	factory "knative.dev/sample-controller/pkg/client/injection/informers/samples/factory"
 )
