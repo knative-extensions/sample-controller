@@ -7,7 +7,7 @@ required = [
   "k8s.io/code-generator/cmd/client-gen",
   "k8s.io/code-generator/cmd/lister-gen",
   "k8s.io/code-generator/cmd/informer-gen",
-  "github.com/knative/pkg/codegen/cmd/injection-gen",
+  "knative.dev/pkg/codegen/cmd/injection-gen",
   "github.com/knative/test-infra/scripts",
   "github.com/knative/test-infra/tools/dep-collector",
 ]
@@ -37,7 +37,7 @@ required = [
   version = "kubernetes-1.12.6"
 
 [[override]]
-  name = "github.com/knative/pkg"
+  name = "knative.dev/pkg"
   branch = "master"
 
 [[override]]
@@ -54,7 +54,7 @@ required = [
   non-go = true
 
 [[prune.project]]
-  name = "github.com/knative/pkg"
+  name = "knative.dev/pkg"
   unused-packages = false
   non-go = false
 

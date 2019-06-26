@@ -21,7 +21,7 @@ import (
 	"knative.dev/sample-controller/pkg/reconciler/addressableservice"
 
 	// This defines the shared main for injected controllers.
-	"github.com/knative/pkg/injection/sharedmain"
+	"knative.dev/pkg/injection/sharedmain"
 )
 
 func main() {
