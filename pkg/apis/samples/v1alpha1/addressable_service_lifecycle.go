@@ -17,8 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"knative.dev/pkg/apis"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"knative.dev/pkg/apis"
 )
 
 var condSet = apis.NewLivingConditionSet()
