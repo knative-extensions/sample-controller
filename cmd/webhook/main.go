@@ -22,6 +22,10 @@ import (
 	"fmt"
 	"log"
 
+	"go.uber.org/zap"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/logging/logkey"
@@ -29,10 +33,6 @@ import (
 	"knative.dev/pkg/system"
 	"knative.dev/pkg/version"
 	"knative.dev/pkg/webhook"
-	"go.uber.org/zap"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
