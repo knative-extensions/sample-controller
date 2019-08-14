@@ -991,12 +991,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:668f401ec93fc68a0cee8a1ff986301c748313b243e1cbf077db688b47806f75"
+  digest = "1:7d668b9ed0ede5e4a99aaed9c9f7c786920de47b2c609a88bcff96c1cd54e7da"
   name = "knative.dev/pkg"
   packages = [
     "apis",
     "apis/duck",
     "apis/duck/v1beta1",
+    "apis/v1alpha1",
     "changeset",
     "codegen/cmd/injection-gen",
     "codegen/cmd/injection-gen/args",
@@ -1021,7 +1022,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "a690d27530bdb0e8921805b7893bd4a7865bb215"
+  revision = "057c0dfb8f56cec704b8d54c1f0517596df78a55"
 
 [[projects]]
   branch = "master"
@@ -1032,7 +1033,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "debabfca4db6699ea762112d7bc439ce04a44690"
+  revision = "7fa4059a538fb5547e50f036db4e9f8d4eb998aa"
 
 [solve-meta]
   analyzer-name = "dep"
