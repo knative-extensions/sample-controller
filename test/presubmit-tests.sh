@@ -25,10 +25,59 @@
 # in a net-negative contributor experience.
 export DISABLE_MD_LINTING=1
 
-source $(dirname $0)/../vendor/knative.dev/test-infra/scripts/presubmit-tests.sh
+source vendor/knative.dev/test-infra/scripts/presubmit-tests.sh
 
-# TODO(mattmoor): integration tests
 
-# We use the default build, unit and integration test runners.
+#/ We use the default build, unit test runners.
+
+function wait_for_result() {
+  echo
+  echo -n "Waiting for $1 reconciliation to run to completion."
+  echo
+  for i in {1..150}; do
+    local url=$(kubectl get asvc my-address -o jsonpath="{.status.address.url}")
+
+    if [[ "$url" == "http://my-service.default.svc.cluster.local" ]]; then
+      echo
+      echo "$1 tests passed"
+      echo
+      return 0
+    fi
+
+    echo -n "."
+    sleep 2
+  done
+
+  echo "timed out waiting for result"
+  exit 1
+}
+
+function test_version() {
+  # Install CRDs
+  ko apply -f "config/$1" || return 1
+
+  # Install control plane
+  ko apply -f config || return 1
+
+  sleep 5s
+
+  kubectl apply -f "test/$1.yaml" || return 1
+
+  wait_for_result "$1" || return 1
+
+  kubectl delete -f "test/$1.yaml" || return 1
+
+  # Delete control plane
+  ko delete -f config || return 1
+
+  # Delete v1alpha1
+  ko delete -f "config/$1" || return 1
+}
+
+
+function integration_tests() {
+  test_version v1alpha1 || return 1
+}
+
 
 main $@
