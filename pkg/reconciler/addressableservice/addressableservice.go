@@ -29,13 +29,12 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/apis"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/tracker"
-	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
-	clientset "knative.dev/sample-controller/pkg/client/clientset/versioned"
-	listers "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
+	"knative.dev/sample-controller/pkg/apis/samples"
+	clientset "knative.dev/sample-controller/pkg/client/clientset/internalversion"
+	listers "knative.dev/sample-controller/pkg/client/listers/samples/internalversion"
 )
 
 // Reconciler implements controller.Reconciler for AddressableService resources.
@@ -107,7 +106,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	return reconcileErr
 }
 
-func (r *Reconciler) reconcile(ctx context.Context, asvc *v1alpha1.AddressableService) error {
+func (r *Reconciler) reconcile(ctx context.Context, asvc *samples.AddressableService) error {
 	if asvc.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
 		// When a controller needs finalizer handling, it would go here.
@@ -123,42 +122,41 @@ func (r *Reconciler) reconcile(ctx context.Context, asvc *v1alpha1.AddressableSe
 	return nil
 }
 
-func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.AddressableService) error {
+func (r *Reconciler) reconcileService(ctx context.Context, asvc *samples.AddressableService) error {
 	logger := logging.FromContext(ctx)
 
 	if err := r.Tracker.Track(corev1.ObjectReference{
-		APIVersion: "v1",
-		Kind:       "Service",
-		Name:       asvc.Spec.ServiceName,
+		APIVersion: asvc.Spec.APIVersion,
+		Kind:       asvc.Spec.Kind,
+		Name:       asvc.Spec.Name,
 		Namespace:  asvc.Namespace,
 	}, asvc); err != nil {
-		logger.Errorf("Error tracking service %s: %v", asvc.Spec.ServiceName, err)
+		logger.Errorf("Error tracking service %s: %v", asvc.Spec.Name, err)
 		return err
 	}
 
-	_, err := r.ServiceLister.Services(asvc.Namespace).Get(asvc.Spec.ServiceName)
+	_, err := r.ServiceLister.Services(asvc.Namespace).Get(asvc.Spec.Name)
 	if apierrs.IsNotFound(err) {
-		logger.Info("Service does not yet exist:", asvc.Spec.ServiceName)
-		asvc.Status.MarkServiceUnavailable(asvc.Spec.ServiceName)
+		logger.Info("Service does not yet exist:", asvc.Spec.Name)
+		asvc.Status.MarkServiceUnavailable(asvc.Spec.Name)
 		return nil
 	} else if err != nil {
-		logger.Errorf("Error reconciling service %s: %v", asvc.Spec.ServiceName, err)
+		logger.Errorf("Error reconciling service %s: %v", asvc.Spec.Name, err)
 		return err
 	}
 
 	asvc.Status.MarkServiceAvailable()
-	asvc.Status.Address = &duckv1beta1.Addressable{
-		URL: &apis.URL{
-			Scheme: "http",
-			Host:   fmt.Sprintf("%s.%s.svc.cluster.local", asvc.Spec.ServiceName, asvc.Namespace),
-		},
+	asvc.Status.URL = &apis.URL{
+		Scheme: "http",
+		Host:   fmt.Sprintf("%s.%s.svc.cluster.local", asvc.Spec.Name, asvc.Namespace),
 	}
+
 	return nil
 }
 
 // Update the Status of the resource.  Caller is responsible for checking
 // for semantic differences before calling.
-func (r *Reconciler) updateStatus(desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, error) {
+func (r *Reconciler) updateStatus(desired *samples.AddressableService) (*samples.AddressableService, error) {
 	actual, err := r.Lister.AddressableServices(desired.Namespace).Get(desired.Name)
 	if err != nil {
 		return nil, err
@@ -170,5 +168,5 @@ func (r *Reconciler) updateStatus(desired *v1alpha1.AddressableService) (*v1alph
 	// Don't modify the informers copy
 	existing := actual.DeepCopy()
 	existing.Status = desired.Status
-	return r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).UpdateStatus(existing)
+	return r.Client.Samples().AddressableServices(desired.Namespace).UpdateStatus(existing)
 }

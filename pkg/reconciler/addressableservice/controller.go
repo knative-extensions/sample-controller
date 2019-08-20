@@ -20,8 +20,8 @@ import (
 	"context"
 
 	svcinformer "knative.dev/pkg/injection/informers/kubeinformers/corev1/service"
-	asclient "knative.dev/sample-controller/pkg/client/injection/client"
-	asinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
+	asclient "knative.dev/sample-controller/pkg/manual/injection/client"
+	asinformer "knative.dev/sample-controller/pkg/manual/injection/informers/samples/internalversion/addressableservice"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
