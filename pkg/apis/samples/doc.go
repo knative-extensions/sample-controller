@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 // +k8s:deepcopy-gen=package
-// +k8s:conversion-gen=knative.dev/sample-controller/pkg/apis/samples
 // +groupName=samples.knative.dev
-package v1alpha1
+
+// Package samples contains the internal APIS for the sample API group
+package samples
