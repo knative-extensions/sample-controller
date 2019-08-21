@@ -35,13 +35,13 @@ ${CODEGEN_PKG}/generate-internal-groups.sh "conversion,client,deepcopy,informer,
   knative.dev/sample-controller/pkg/client \
   knative.dev/sample-controller/pkg/apis   \
   knative.dev/sample-controller/pkg/apis   \
-  "samples:v1alpha1" \
+  "samples:v1alpha1,v1beta1" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Knative Injection
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/sample-controller/pkg/client knative.dev/sample-controller/pkg/apis \
-  "samples:v1alpha1" \
+  "samples:v1alpha1,v1beta1" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Make sure our dependencies are up-to-date

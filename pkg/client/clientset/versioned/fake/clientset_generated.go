@@ -27,6 +27,8 @@ import (
 	clientset "knative.dev/sample-controller/pkg/client/clientset/versioned"
 	samplesv1alpha1 "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1alpha1"
 	fakesamplesv1alpha1 "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1alpha1/fake"
+	samplesv1beta1 "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1beta1"
+	fakesamplesv1beta1 "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1beta1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -76,7 +78,12 @@ func (c *Clientset) SamplesV1alpha1() samplesv1alpha1.SamplesV1alpha1Interface {
 	return &fakesamplesv1alpha1.FakeSamplesV1alpha1{Fake: &c.Fake}
 }
 
-// Samples retrieves the SamplesV1alpha1Client
-func (c *Clientset) Samples() samplesv1alpha1.SamplesV1alpha1Interface {
-	return &fakesamplesv1alpha1.FakeSamplesV1alpha1{Fake: &c.Fake}
+// SamplesV1beta1 retrieves the SamplesV1beta1Client
+func (c *Clientset) SamplesV1beta1() samplesv1beta1.SamplesV1beta1Interface {
+	return &fakesamplesv1beta1.FakeSamplesV1beta1{Fake: &c.Fake}
+}
+
+// Samples retrieves the SamplesV1beta1Client
+func (c *Clientset) Samples() samplesv1beta1.SamplesV1beta1Interface {
+	return &fakesamplesv1beta1.FakeSamplesV1beta1{Fake: &c.Fake}
 }

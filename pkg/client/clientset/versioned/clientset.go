@@ -23,13 +23,15 @@ import (
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"
 	samplesv1alpha1 "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1alpha1"
+	samplesv1beta1 "knative.dev/sample-controller/pkg/client/clientset/versioned/typed/samples/v1beta1"
 )
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	SamplesV1alpha1() samplesv1alpha1.SamplesV1alpha1Interface
+	SamplesV1beta1() samplesv1beta1.SamplesV1beta1Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Samples() samplesv1alpha1.SamplesV1alpha1Interface
+	Samples() samplesv1beta1.SamplesV1beta1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
@@ -37,6 +39,7 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	samplesV1alpha1 *samplesv1alpha1.SamplesV1alpha1Client
+	samplesV1beta1  *samplesv1beta1.SamplesV1beta1Client
 }
 
 // SamplesV1alpha1 retrieves the SamplesV1alpha1Client
@@ -44,10 +47,15 @@ func (c *Clientset) SamplesV1alpha1() samplesv1alpha1.SamplesV1alpha1Interface {
 	return c.samplesV1alpha1
 }
 
+// SamplesV1beta1 retrieves the SamplesV1beta1Client
+func (c *Clientset) SamplesV1beta1() samplesv1beta1.SamplesV1beta1Interface {
+	return c.samplesV1beta1
+}
+
 // Deprecated: Samples retrieves the default version of SamplesClient.
 // Please explicitly pick a version.
-func (c *Clientset) Samples() samplesv1alpha1.SamplesV1alpha1Interface {
-	return c.samplesV1alpha1
+func (c *Clientset) Samples() samplesv1beta1.SamplesV1beta1Interface {
+	return c.samplesV1beta1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -70,6 +78,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.samplesV1beta1, err = samplesv1beta1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 
 	cs.DiscoveryClient, err = discovery.NewDiscoveryClientForConfig(&configShallowCopy)
 	if err != nil {
@@ -83,6 +95,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.samplesV1alpha1 = samplesv1alpha1.NewForConfigOrDie(c)
+	cs.samplesV1beta1 = samplesv1beta1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -92,6 +105,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.samplesV1alpha1 = samplesv1alpha1.New(c)
+	cs.samplesV1beta1 = samplesv1beta1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs
