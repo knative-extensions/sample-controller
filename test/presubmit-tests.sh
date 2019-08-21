@@ -29,6 +29,7 @@ source vendor/knative.dev/test-infra/scripts/presubmit-tests.sh
 
 
 #/ We use the default build, unit test runners.
+readonly INSTALL_YAML=$(mktemp)
 
 function wait_for_result() {
   echo
@@ -49,34 +50,54 @@ function wait_for_result() {
   done
 
   echo "timed out waiting for result"
-  exit 1
+  return 1
+}
+
+function pre_integration_tests() {
+  ko resolve -f config > "$INSTALL_YAML" || return 1
+}
+
+function post_integration_tests() {
+  # Delete control plane
+  kubectl delete -f "$INSTALL_YAML" || return 1
+
+  # Delete CRDS
+  kubectl delete \
+    -f "config/v1alpha1" \
+    -f "config/v1beta1" || return 1
 }
 
 function test_version() {
+  version="$1"
+  shift
+
+  post_integration_tests
+
   # Install CRDs
-  ko apply -f "config/$1" || return 1
+  kubectl apply -f "config/$version" || return 1
 
   # Install control plane
-  ko apply -f config || return 1
+  kubectl apply -f "$INSTALL_YAML" || return 1
 
   sleep 5s
 
-  kubectl apply -f "test/$1.yaml" || return 1
+  kubectl apply -f "test/$version.yaml" || return 1
 
-  wait_for_result "$1" || return 1
+  wait_for_result $version
 
-  kubectl delete -f "test/$1.yaml" || return 1
+  result=$?
 
-  # Delete control plane
-  ko delete -f config || return 1
+  kubectl delete -f "test/$version.yaml"
 
-  # Delete v1alpha1
-  ko delete -f "config/$1" || return 1
+  return $result
 }
 
-
 function integration_tests() {
-  test_version v1alpha1 || return 1
+  test_version v1alpha1 \
+    || return 1
+
+  test_version v1beta1 \
+    || return 1
 }
 
 
