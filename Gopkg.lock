@@ -348,6 +348,14 @@
   version = "v3.0.0"
 
 [[projects]]
+  digest = "1:14715f705ff5dfe0ffd6571d7d201dd8e921030f8070321a79380d8ca4ec1a24"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
+
+[[projects]]
   digest = "1:09fd8d3e830bac0a0e2d1f7009fe33a0c435ee14ae818be9cc9ceb5f77da18ae"
   name = "github.com/prometheus/client_golang"
   packages = [
@@ -516,9 +524,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:382bb5a7fb4034db3b6a2d19e5a4a6bcf52f4750530603c01ca18a172fa3089b"
+  digest = "1:a2fc247e64b5dafd3251f12d396ec85f163d5bb38763c4997856addddf6e78d8"
   name = "golang.org/x/sync"
-  packages = ["semaphore"]
+  packages = [
+    "errgroup",
+    "semaphore",
+  ]
   pruneopts = "NUT"
   revision = "112230192c580c3556b8cee6403af37a4fc5f28c"
 
@@ -991,7 +1002,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5dddb45857ff59292216934b6f39415befab65246afac26ba14976e3ec11a343"
+  digest = "1:4ede44d732fec3c64776a5ec3897efc2b5fbd42dd014f9bde56e69f3bece21e1"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1015,6 +1026,7 @@
     "logging/logkey",
     "metrics",
     "metrics/metricskey",
+    "profiling",
     "signals",
     "system",
     "tracker",
@@ -1022,7 +1034,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "9f6e5334c25aeebd862b19cb6715f9fe5aa56467"
+  revision = "366ab85660d4e1c260795bd23c2aa09a4721c282"
 
 [[projects]]
   branch = "master"
@@ -1033,7 +1045,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "d2746f8b9470e8c8452a997e95190aba5320678a"
+  revision = "d7182fdc8d03f19b78b96e4aa3e94d831facf4d0"
 
 [solve-meta]
   analyzer-name = "dep"
