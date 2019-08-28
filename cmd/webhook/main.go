@@ -21,14 +21,17 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/logging/logkey"
+	"knative.dev/pkg/profiling"
 	"knative.dev/pkg/signals"
 	"knative.dev/pkg/system"
 	"knative.dev/pkg/version"
@@ -46,14 +49,14 @@ var (
 	kubeconfig = flag.String("kubeconfig", "", "Path to a kubeconfig. Only required if out-of-cluster.")
 )
 
-type Store interface {
-	WatchConfigs(configmap.Watcher)
-	ToContext(context.Context) context.Context
-}
+// type Store interface {
+// 	WatchConfigs(configmap.Watcher)
+// 	ToContext(context.Context) context.Context
+// }
 
-type StoreFactory func(*zap.SugaredLogger) Store
+// type StoreFactory func(*zap.SugaredLogger) Store
 
-func SharedMain(handlers map[schema.GroupVersionKind]webhook.GenericCRD, factories ...StoreFactory) {
+func main() {
 	flag.Parse()
 	cm, err := configmap.Load("/etc/config-logging")
 	if err != nil {
@@ -90,15 +93,15 @@ func SharedMain(handlers map[schema.GroupVersionKind]webhook.GenericCRD, factori
 	configMapWatcher := configmap.NewInformedWatcher(kubeClient, system.Namespace())
 	configMapWatcher.Watch(logging.ConfigMapName(), logging.UpdateLevelFromConfigMap(logger, atomicLevel, component))
 
-	// If you want to control Defaulting or Validation, you can attach config state
-	// to the context by watching the configmap here, and then uncommenting the logic
-	// below.
-	stores := make([]Store, 0, len(factories))
-	for _, sf := range factories {
-		store := sf(logger)
-		store.WatchConfigs(configMapWatcher)
-		stores = append(stores, store)
-	}
+	// // If you want to control Defaulting or Validation, you can attach config state
+	// // to the context by watching the configmap here, and then uncommenting the logic
+	// // below.
+	// stores := make([]Store, 0, len(factories))
+	// for _, sf := range factories {
+	// 	store := sf(logger)
+	// 	store.WatchConfigs(configMapWatcher)
+	// 	stores = append(stores, store)
+	// }
 
 	if err = configMapWatcher.Start(ctx.Done()); err != nil {
 		logger.Fatalw("Failed to start the ConfigMap watcher", zap.Error(err))
@@ -112,35 +115,38 @@ func SharedMain(handlers map[schema.GroupVersionKind]webhook.GenericCRD, factori
 		SecretName:     "webhook-certs",
 		WebhookName:    fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
 	}
-	controller := webhook.AdmissionController{
-		Client:                kubeClient,
-		Options:               options,
-		Handlers:              handlers,
-		Logger:                logger,
-		DisallowUnknownFields: true,
 
-		WithContext: func(ctx context.Context) context.Context {
-			for _, store := range stores {
-				ctx = store.ToContext(ctx)
-			}
-			return ctx
-		},
-	}
-	if err = controller.Run(ctx.Done()); err != nil {
-		logger.Fatalw("Failed to start the admission controller", zap.Error(err))
-	}
-}
-
-func main() {
 	handlers := map[schema.GroupVersionKind]webhook.GenericCRD{
 		v1alpha1.SchemeGroupVersion.WithKind("AddressableService"): &v1alpha1.AddressableService{},
 	}
-	SharedMain(handlers)
 
-	// To setup a config "Store" to track a set of configurations and persist itself to
-	// the context passed to webhook invocations, you would pass something like this to
-	// SharedMain as well:
-	// func(logger *zap.SugaredLogger) Store {
-	// 	return apiconfig.NewStore(logger.Named("config-store"))
-	// }
+	// Decorate contexts with the current state of the config.
+	ctxFunc := func(ctx context.Context) context.Context {
+		return ctx
+	}
+
+	controller, err := webhook.NewAdmissionController(kubeClient, options, handlers, logger, ctxFunc, true)
+
+	if err != nil {
+		logger.Fatalw("Failed to create admission controller", zap.Error(err))
+	}
+
+	profilingHandler := profiling.NewHandler(logger, false)
+	profilingServer := profiling.NewServer(profilingHandler)
+
+	eg, egCtx := errgroup.WithContext(ctx)
+	eg.Go(func() error {
+		return controller.Run(ctx.Done())
+	})
+	eg.Go(profilingServer.ListenAndServe)
+
+	// This will block until either a signal arrives or one of the grouped functions
+	// returns an error.
+	<-egCtx.Done()
+
+	profilingServer.Shutdown(context.Background())
+	// Don't forward ErrServerClosed as that indicates we're already shutting down.
+	if err := eg.Wait(); err != nil && err != http.ErrServerClosed {
+		logger.Errorw("Error while running server", zap.Error(err))
+	}
 }
