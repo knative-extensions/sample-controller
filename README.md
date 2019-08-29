@@ -3,6 +3,8 @@
 [![GoDoc](https://godoc.org/knative.dev/sample-controller?status.svg)](https://godoc.org/knative.dev/sample-controller)
 [![Go Report Card](https://goreportcard.com/badge/knative/sample-controller)](https://goreportcard.com/report/knative/sample-controller)
 
+blah
+
 Knative `sample-controller` defines a few simple resources that are validated by
 webhook and managed by a controller to demonstrate the canonical style in which
 Knative writes controllers.
