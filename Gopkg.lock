@@ -1002,7 +1002,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bb5bc945cb10dbe8d011d5b6477576bd72ef6420a1329c5f12e1f5de1db32877"
+  digest = "1:41481f052bf6423d8d190b1c77f1409535c660decc1ccc284f2a70fe910bc2b7"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1034,24 +1034,25 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "9118872a32f620bbf4798b4e6103094f6b7bce6c"
+  revision = "c1d6e0d59837e7fc5084fb374786dd1f88cf5d88"
 
 [[projects]]
   branch = "master"
-  digest = "1:a68a49f889453ee0abab8d32ceaa19c12a1e86c7919e9cecb3d5ceac6aac199c"
+  digest = "1:230d4d8a9aa64db75413202a9d1cde3b80bcc417b858093f0fd27c2017bb4955"
   name = "knative.dev/test-infra"
   packages = [
     "scripts",
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "b639ab478b1e4882090abb51a043ba2dc9aaafcb"
+  revision = "89eac9b9bdd8897c246cbd9383e19e3be23146d3"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "go.uber.org/zap",
+    "golang.org/x/sync/errgroup",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/api/errors",
@@ -1090,6 +1091,7 @@
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/logging",
     "knative.dev/pkg/logging/logkey",
+    "knative.dev/pkg/profiling",
     "knative.dev/pkg/signals",
     "knative.dev/pkg/system",
     "knative.dev/pkg/tracker",
