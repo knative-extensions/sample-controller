@@ -1002,7 +1002,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:41481f052bf6423d8d190b1c77f1409535c660decc1ccc284f2a70fe910bc2b7"
+  digest = "1:c695f3415658f521f10bd3c3ed7f9a86433eafb2ca554ba64c2160d05c9633b0"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1034,7 +1034,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "c1d6e0d59837e7fc5084fb374786dd1f88cf5d88"
+  revision = "0c1c6db1df9ea2343a6dbf1290e4325682fcf85d"
 
 [[projects]]
   branch = "master"
@@ -1045,7 +1045,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "89eac9b9bdd8897c246cbd9383e19e3be23146d3"
+  revision = "90a447afb0f4562ff89ac2975334aefcf864d21d"
 
 [solve-meta]
   analyzer-name = "dep"
