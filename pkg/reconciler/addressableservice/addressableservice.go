@@ -18,7 +18,6 @@ package addressableservice
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"go.uber.org/zap"
@@ -32,6 +31,7 @@ import (
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/network"
 	"knative.dev/pkg/tracker"
 	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	clientset "knative.dev/sample-controller/pkg/client/clientset/versioned"
@@ -150,7 +150,7 @@ func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.Addres
 	asvc.Status.Address = &duckv1beta1.Addressable{
 		URL: &apis.URL{
 			Scheme: "http",
-			Host:   fmt.Sprintf("%s.%s.svc.cluster.local", asvc.Spec.ServiceName, asvc.Namespace),
+			Host:   network.GetServiceHostname(asvc.Spec.ServiceName, asvc.Namespace),
 		},
 	}
 	return nil
