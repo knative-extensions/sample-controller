@@ -108,16 +108,22 @@ func main() {
 	}
 
 	options := webhook.ControllerOptions{
-		ServiceName:    "webhook",
-		DeploymentName: "webhook",
-		Namespace:      system.Namespace(),
-		Port:           8443,
-		SecretName:     "webhook-certs",
-		WebhookName:    fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
+		ServiceName:                     "webhook",
+		DeploymentName:                  "webhook",
+		Namespace:                       system.Namespace(),
+		Port:                            8443,
+		SecretName:                      "webhook-certs",
+		WebhookName:                     fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
+		ResourceAdmissionControllerPath: "/",
 	}
 
-	handlers := map[schema.GroupVersionKind]webhook.GenericCRD{
+	resourceHandlers := map[schema.GroupVersionKind]webhook.GenericCRD{
 		v1alpha1.SchemeGroupVersion.WithKind("AddressableService"): &v1alpha1.AddressableService{},
+	}
+
+	resourceAdmissionController := webhook.NewResourceAdmissionController(resourceHandlers, options, true)
+	admissionControllers := map[string]webhook.AdmissionController{
+		options.ResourceAdmissionControllerPath: resourceAdmissionController,
 	}
 
 	// Decorate contexts with the current state of the config.
@@ -125,7 +131,7 @@ func main() {
 		return ctx
 	}
 
-	controller, err := webhook.NewAdmissionController(kubeClient, options, handlers, logger, ctxFunc, true)
+	controller, err := webhook.New(kubeClient, options, admissionControllers, logger, ctxFunc)
 
 	if err != nil {
 		logger.Fatalw("Failed to create admission controller", zap.Error(err))
