@@ -23,7 +23,7 @@ import (
 
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
-	fake "knative.dev/sample-controller/pkg/client/injection/informers/samples/factory/fake"
+	fake "knative.dev/sample-controller/pkg/client/injection/informers/factory/fake"
 	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
 )
 
