@@ -19,7 +19,7 @@ package addressableservice
 import (
 	"context"
 
-	svcinformer "knative.dev/pkg/injection/informers/kubeinformers/corev1/service"
+	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	asclient "knative.dev/sample-controller/pkg/client/injection/client"
 	asinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
 
