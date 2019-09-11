@@ -113,7 +113,7 @@ func main() {
 		Namespace:                       system.Namespace(),
 		Port:                            8443,
 		SecretName:                      "webhook-certs",
-		WebhookName:                     fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
+		ResourceMutatingWebhookName:     fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
 		ResourceAdmissionControllerPath: "/",
 	}
 
