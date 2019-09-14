@@ -38,7 +38,7 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "master"
+  branch = "release-0.9"
 
 [[override]]
   name = "google.golang.org/genproto"
