@@ -57,7 +57,7 @@ func (in *AddressableService) DeepCopyObject() runtime.Object {
 func (in *AddressableServiceList) DeepCopyInto(out *AddressableServiceList) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	out.ListMeta = in.ListMeta
+	in.ListMeta.DeepCopyInto(&out.ListMeta)
 	if in.Items != nil {
 		in, out := &in.Items, &out.Items
 		*out = make([]AddressableService, len(*in))
