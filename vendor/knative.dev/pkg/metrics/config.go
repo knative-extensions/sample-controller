@@ -24,6 +24,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	texttemplate "text/template"
 	"time"
 
 	"go.uber.org/zap"
@@ -58,28 +59,69 @@ const (
 	defaultPrometheusPort = 9090
 	maxPrometheusPort     = 65535
 	minPrometheusPort     = 1024
+
+	DefaultLogURLTemplate = "http://localhost:8001/api/v1/namespaces/knative-monitoring/services/kibana-logging/proxy/app/kibana#/discover?_a=(query:(match:(kubernetes.labels.knative-dev%2FrevisionUID:(query:'${REVISION_UID}',type:phrase))))"
 )
 
-// ExporterOptions contains options for configuring the exporter.
-type ExporterOptions struct {
-	// Domain is the metrics domain. e.g. "knative.dev". Must be present.
-	Domain string
+// ObservabilityConfig contains the configuration defined in the observability ConfigMap.
+type ObservabilityConfig struct {
+	// EnableVarLogCollection specifies whether the logs under /var/log/ should be available
+	// for collection on the host node by the fluentd daemon set.
+	EnableVarLogCollection bool
 
-	// Component is the name of the component that emits the metrics. e.g.
-	// "activator", "queue_proxy". Should only contains alphabets and underscore.
-	// Must be present.
-	Component string
+	// LoggingURLTemplate is a string containing the logging url template where
+	// the variable REVISION_UID will be replaced with the created revision's UID.
+	LoggingURLTemplate string
 
-	// PrometheusPort is the port to expose metrics if metrics backend is Prometheus.
-	// It should be between maxPrometheusPort and maxPrometheusPort. 0 value means
-	// using the default 9090 value. If is ignored if metrics backend is not
-	// Prometheus.
-	PrometheusPort int
+	// RequestLogTemplate is the go template to use to shape the request logs.
+	RequestLogTemplate string
 
-	// ConfigMap is the data from config map config-observability. Must be present.
-	// See https://github.com/knative/serving/blob/master/config/config-observability.yaml
-	// for details.
-	ConfigMap map[string]string
+	// EnableProbeRequestLog enables queue-proxy to write health check probe request logs.
+	EnableProbeRequestLog bool
+
+	// RequestMetricsBackend specifies the request metrics destination, e.g. Prometheus,
+	// Stackdriver.
+	RequestMetricsBackend string
+
+	// EnableProfiling indicates whether it is allowed to retrieve runtime profiling data from
+	// the pods via an HTTP server in the format expected by the pprof visualization tool.
+	EnableProfiling bool
+}
+
+// NewObservabilityConfigFromConfigMap creates a ObservabilityConfig from the supplied ConfigMap
+func NewObservabilityConfigFromConfigMap(configMap *corev1.ConfigMap) (*ObservabilityConfig, error) {
+	oc := &ObservabilityConfig{}
+	if evlc, ok := configMap.Data["logging.enable-var-log-collection"]; ok {
+		oc.EnableVarLogCollection = strings.EqualFold(evlc, "true")
+	}
+
+	if rut, ok := configMap.Data["logging.revision-url-template"]; ok {
+		oc.LoggingURLTemplate = rut
+	} else {
+		oc.LoggingURLTemplate = DefaultLogURLTemplate
+	}
+
+	if rlt, ok := configMap.Data["logging.request-log-template"]; ok {
+		// Verify that we get valid templates.
+		if _, err := texttemplate.New("requestLog").Parse(rlt); err != nil {
+			return nil, err
+		}
+		oc.RequestLogTemplate = rlt
+	}
+
+	if eprl, ok := configMap.Data["logging.enable-probe-request-log"]; ok {
+		oc.EnableProbeRequestLog = strings.EqualFold(eprl, "true")
+	}
+
+	if mb, ok := configMap.Data["metrics.request-metrics-backend-destination"]; ok {
+		oc.RequestMetricsBackend = mb
+	}
+
+	if prof, ok := configMap.Data["profiling.enable"]; ok {
+		oc.EnableProfiling = strings.EqualFold(prof, "true")
+	}
+
+	return oc, nil
 }
 
 type metricsConfig struct {
@@ -125,7 +167,7 @@ type metricsConfig struct {
 	stackdriverCustomMetricTypePrefix string
 }
 
-func getMetricsConfig(ops ExporterOptions, logger *zap.SugaredLogger) (*metricsConfig, error) {
+func createMetricsConfig(ops ExporterOptions, logger *zap.SugaredLogger) (*metricsConfig, error) {
 	var mc metricsConfig
 
 	if ops.Domain == "" {
@@ -213,62 +255,6 @@ func getMetricsConfig(ops ExporterOptions, logger *zap.SugaredLogger) (*metricsC
 	}
 
 	return &mc, nil
-}
-
-// UpdateExporterFromConfigMap returns a helper func that can be used to update the exporter
-// when a config map is updated.
-func UpdateExporterFromConfigMap(component string, logger *zap.SugaredLogger) func(configMap *corev1.ConfigMap) {
-	domain := Domain()
-	return func(configMap *corev1.ConfigMap) {
-		UpdateExporter(ExporterOptions{
-			Domain:    domain,
-			Component: component,
-			ConfigMap: configMap.Data,
-		}, logger)
-	}
-}
-
-// UpdateExporter updates the exporter based on the given ExporterOptions.
-func UpdateExporter(ops ExporterOptions, logger *zap.SugaredLogger) error {
-	newConfig, err := getMetricsConfig(ops, logger)
-	if err != nil {
-		if ce := getCurMetricsExporter(); ce == nil {
-			// Fail the process if there doesn't exist an exporter.
-			logger.Errorw("Failed to get a valid metrics config", zap.Error(err))
-		} else {
-			logger.Errorw("Failed to get a valid metrics config; Skip updating the metrics exporter", zap.Error(err))
-		}
-		return err
-	}
-
-	if isNewExporterRequired(newConfig) {
-		logger.Info("Flushing the existing exporter before setting up the new exporter.")
-		FlushExporter()
-		e, err := newMetricsExporter(newConfig, logger)
-		if err != nil {
-			logger.Errorf("Failed to update a new metrics exporter based on metric config %v. error: %v", newConfig, err)
-			return err
-		}
-		existingConfig := getCurMetricsConfig()
-		setCurMetricsExporter(e)
-		logger.Infof("Successfully updated the metrics exporter; old config: %v; new config %v", existingConfig, newConfig)
-	}
-
-	setCurMetricsConfig(newConfig)
-	return nil
-}
-
-// isNewExporterRequired compares the non-nil newConfig against curMetricsConfig. When backend changes,
-// or stackdriver project ID changes for stackdriver backend, we need to update the metrics exporter.
-func isNewExporterRequired(newConfig *metricsConfig) bool {
-	cc := getCurMetricsConfig()
-	if cc == nil || newConfig.backendDestination != cc.backendDestination {
-		return true
-	} else if newConfig.backendDestination == Stackdriver && newConfig.stackdriverProjectID != cc.stackdriverProjectID {
-		return true
-	}
-
-	return false
 }
 
 // ConfigMapName gets the name of the metrics ConfigMap

@@ -36,6 +36,7 @@ import (
 	"knative.dev/pkg/system"
 	"knative.dev/pkg/version"
 	"knative.dev/pkg/webhook"
+	"knative.dev/pkg/metrics"
 
 	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
@@ -113,17 +114,27 @@ func main() {
 		Namespace:                       system.Namespace(),
 		Port:                            8443,
 		SecretName:                      "webhook-certs",
-		ResourceMutatingWebhookName:     fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
+		ResourceMutatingWebhookName:     fmt.Sprintf("resource.webhook.%s.knative.dev", system.Namespace()),
+		ConfigValidationWebhookName:     fmt.Sprintf("config.webhook.%s.knative.dev", system.Namespace()),
 		ResourceAdmissionControllerPath: "/",
+		ConfigValidationControllerPath:  "/config-validation",
+		ConfigValidationNamespaceLabel:  "samples.knative.dev/release",
 	}
 
 	resourceHandlers := map[schema.GroupVersionKind]webhook.GenericCRD{
 		v1alpha1.SchemeGroupVersion.WithKind("AddressableService"): &v1alpha1.AddressableService{},
 	}
 
+	configHandlers := configmap.Constructors{
+		logging.ConfigMapName(): logging.NewConfigFromConfigMap,
+		metrics.ConfigMapName(): metrics.NewObservabilityConfigFromConfigMap,
+	}
+
 	resourceAdmissionController := webhook.NewResourceAdmissionController(resourceHandlers, options, true)
+	configValidationController := webhook.NewConfigValidationController(configHandlers, options)
 	admissionControllers := map[string]webhook.AdmissionController{
 		options.ResourceAdmissionControllerPath: resourceAdmissionController,
+		options.ConfigValidationControllerPath:  configValidationController,
 	}
 
 	// Decorate contexts with the current state of the config.
