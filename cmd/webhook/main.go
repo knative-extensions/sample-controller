@@ -108,11 +108,11 @@ func main() {
 	}
 
 	options := webhook.ControllerOptions{
-		ServiceName:                     "webhook",
-		DeploymentName:                  "webhook",
-		Namespace:                       system.Namespace(),
-		Port:                            8443,
-		SecretName:                      "webhook-certs",
+		ServiceName: "webhook",
+		Namespace:   system.Namespace(),
+		Port:        8443,
+		SecretName:  "webhook-certs",
+
 		ResourceMutatingWebhookName:     fmt.Sprintf("webhook.%s.knative.dev", system.Namespace()),
 		ResourceAdmissionControllerPath: "/",
 	}
