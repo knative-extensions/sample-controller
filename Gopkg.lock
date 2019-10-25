@@ -992,7 +992,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:107e35775eecc1a549b9c399352d51ef5d5293e136a3dcb2526552208949d352"
+  digest = "1:d91a27f79bca7f71b57bdc3581542d646c90dca75862c38d21ad7b1aca6c22aa"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1019,6 +1019,7 @@
     "metrics/metricskey",
     "network",
     "profiling",
+    "ptr",
     "signals",
     "system",
     "tracker",
@@ -1026,7 +1027,7 @@
     "webhook",
   ]
   pruneopts = "T"
-  revision = "878b391a68aea78683f9daccafca778c6db5ed48"
+  revision = "cad41c40ccb5a40de7a3b65097649703c8d96e0b"
 
 [[projects]]
   branch = "master"
