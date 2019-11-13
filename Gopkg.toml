@@ -38,17 +38,14 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  branch = "master"
+  # DO NOT SUBMIT
+  source = "github.com/yanweiguo/pkg"
+  revision = "0a20941b320845202b52748fc0514069debcb1d5"
+  # branch = "master"
 
 [[override]]
   name = "google.golang.org/genproto"
   revision = "e7d98fc518a78c9f8b5ee77be7b0b317475d89e1"
-
-[[override]]
-  name = "contrib.go.opencensus.io/exporter/stackdriver"
-  # The build fails against 0.12.6 and newer because
-  # stackdriver.Options.GetMonitoredResource was removed.
-  version = "<=v0.12.5"
 
 [[override]]
   name = "go.opencensus.io"
