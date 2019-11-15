@@ -28,6 +28,26 @@ webhooks:
   failurePolicy: Fail
   name: resources.webhook.knative-samples.knative.dev
 ---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: config.webhook.knative-samples.knative.dev
+  labels:
+    serving.knative.dev/release: devel
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook
+      namespace: knative-samples
+  failurePolicy: Fail
+  name: config.webhook.knative-samples.knative.dev
+  namespaceSelector:
+    matchExpressions:
+    - key: samples.knative.dev/release
+      operator: Exists
+---
 apiVersion: v1
 kind: Secret
 metadata:
