@@ -992,7 +992,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ff0b6b2483ef9341cc0c524f1e5bdbba37b56dde366791986e098a01de81dcac"
+  digest = "1:b1b3870d2746e5277761a3c2811d2b486db20a09763a1d98476cf82f2afbc0fc"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1002,6 +1002,7 @@
     "changeset",
     "client/injection/kube/client",
     "client/injection/kube/informers/admissionregistration/v1beta1/mutatingwebhookconfiguration",
+    "client/injection/kube/informers/admissionregistration/v1beta1/validatingwebhookconfiguration",
     "client/injection/kube/informers/core/v1/secret",
     "client/injection/kube/informers/core/v1/service",
     "client/injection/kube/informers/factory",
@@ -1028,10 +1029,13 @@
     "webhook",
     "webhook/certificates",
     "webhook/certificates/resources",
+    "webhook/configmaps",
     "webhook/resourcesemantics",
+    "webhook/resourcesemantics/defaulting",
+    "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "d3841ea2c3cb7246076d771abd5cef8b94ef9031"
+  revision = "4836f680bbe5dc615e9c822f21c6685d97c6d553"
 
 [[projects]]
   branch = "master"
@@ -1092,13 +1096,17 @@
     "knative.dev/pkg/injection/sharedmain",
     "knative.dev/pkg/kmeta",
     "knative.dev/pkg/logging",
+    "knative.dev/pkg/metrics",
     "knative.dev/pkg/network",
     "knative.dev/pkg/signals",
     "knative.dev/pkg/system",
     "knative.dev/pkg/tracker",
     "knative.dev/pkg/webhook",
     "knative.dev/pkg/webhook/certificates",
+    "knative.dev/pkg/webhook/configmaps",
     "knative.dev/pkg/webhook/resourcesemantics",
+    "knative.dev/pkg/webhook/resourcesemantics/defaulting",
+    "knative.dev/pkg/webhook/resourcesemantics/validation",
     "knative.dev/test-infra/scripts",
     "knative.dev/test-infra/tools/dep-collector",
   ]

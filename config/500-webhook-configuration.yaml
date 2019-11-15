@@ -15,7 +15,7 @@
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: resources.webhook.knative-samples.knative.dev
+  name: defaulting.webhook.knative-samples.knative.dev
   labels:
     samples.knative.dev/release: devel
 webhooks:
@@ -26,7 +26,23 @@ webhooks:
       name: webhook
       namespace: knative-samples
   failurePolicy: Fail
-  name: resources.webhook.knative-samples.knative.dev
+  name: defaulting.webhook.knative-samples.knative.dev
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validation.webhook.knative-samples.knative.dev
+  labels:
+    samples.knative.dev/release: devel
+webhooks:
+- admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook
+      namespace: knative-samples
+  failurePolicy: Fail
+  name: validation.webhook.knative-samples.knative.dev
 ---
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
