@@ -28,62 +28,101 @@ import (
 	"testing"
 	"time"
 
-	cloudevents "github.com/cloudevents/sdk-go"
-	"github.com/cloudevents/sdk-go/pkg/binding"
-	"github.com/cloudevents/sdk-go/pkg/binding/test"
+	ce "github.com/cloudevents/sdk-go"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"knative.dev/eventing-contrib/pkg/kncloudevents"
-	"knative.dev/sample-controller/pkg/eventing/adapter"
+	"knative.dev/eventing/pkg/adapter"
 )
 
-var (
-	sourceURI = types.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}}
-	timestamp = types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)}
-	schema    = types.URI{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/schema"}}
-)
+func TestAdapter(t *testing.T) {
+	// Test sink to receive events.
+	sink := newSink()
+	defer sink.Close()
 
-func testEvent() cloudevents.Event {
-	return cloudevents.Event{
-		Context: cloudevents.EventContextV1{
+	// Run the adapter in this process.
+	c, err := kncloudevents.NewDefaultClient(sink.URL)
+	require.NoError(t, err)
+	a := NewAdapter(context.Background(), &envConfig{SourceURI: "http://:0"}, c, nil)
+	sourceURI := "http://" + a.(*Adapter).listener.Addr().String()
+	stop := make(chan struct{})
+	go a.Start(stop)
+	defer func() { close(stop) }()
+
+	c, err = kncloudevents.NewDefaultClient(sourceURI)
+	require.NoError(t, err)
+	_, _, err = c.Send(context.Background(), testEvent)
+	assert.NoError(t, err)
+	got := <-sink.received
+	assert.Equal(t, testEvent, got)
+}
+
+func TestAdapterMain(t *testing.T) {
+	// Use the test executable to simulate the cmd/receive_adapter process if
+	// environment var t.Name() is set to "main"
+	// (see https://talks.golang.org/2014/testing.slide#23)
+	if os.Getenv(t.Name()) == "main" {
+		adapter.Main("sample-source", NewEnv, NewAdapter)
+		return
+	}
+
+	// Set up a test sink to receive from the adapter.
+	received := make(chan ce.Event, 1)
+	sink := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, req *http.Request) {
+		e, err := decode(req)
+		if err != nil {
+			e.SetDataContentType(err.Error()) // invalidate the event with error message
+		}
+		received <- e
+	}))
+	defer sink.Close()
+	sinkURI := sink.URL
+
+	// Run a simulated receive_adapter main using the test executable.
+	sourceURI := "http://" + ephemeralAddr(t)
+	cmd := exec.Command(os.Args[0], "-test.run="+t.Name())
+	cmd.Env = append(os.Environ(),
+		t.Name()+"=main",
+		"SINK_URI="+sinkURI,
+		"SOURCE_URI="+sourceURI,
+		"NAMESPACE=namespace",
+		`K_METRICS_CONFIG={"domain":"x", "component":"x", "prometheusport":0, "configmap":{}}`,
+		`K_LOGGING_CONFIG={}`,
+	)
+
+	// Collect output, wait for "starting sample adapter"
+	pr, pw := io.Pipe()
+	cmd.Stdout, cmd.Stderr = pw, pw
+	require.NoError(t, cmd.Start())
+	defer func() { cmd.Process.Kill(); _, _ = cmd.Process.Wait() }()
+	require.NoError(t, waitFor(pr, "Sample adapter listening"))
+	go func() { io.Copy(cmd.Stderr, pr) }() // Copy any further log output to stderr.
+
+	// Send to adapter source URI, verify event received at the sink.
+	e := ce.Event{
+		Context: ce.EventContextV1{
 			Type:   "com.example.MinEvent",
-			Source: sourceURI,
+			Source: types.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}},
 			ID:     "min-event",
-			Time:   &timestamp,
+			Time:   &types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)},
 		}.AsV1(),
 	}
-}
-
-func testSender(t *testing.T, targetURL string) binding.SendCloser {
-	t.Helper()
-	c, err := kncloudevents.NewDefaultClient(targetURL)
+	c, err := kncloudevents.NewDefaultClient(sourceURI)
 	require.NoError(t, err)
-	return adapter.NewClientSender(c, context.Background())
+	_, _, err = c.Send(context.Background(), e)
+	assert.NoError(t, err)
+	got := <-received
+	assert.Equal(t, e, got)
 }
 
-func TestNewHandlerReceiver(t *testing.T) {
-	r := NewHandlerReceiver()
-	rSrv := httptest.NewServer(r)
-	defer rSrv.Close()
-	s := testSender(t, rSrv.URL)
-	defer s.Close(context.Background())
-
-	want := binding.EventMessage(testEvent())
-	got := test.SendReceive(t, want, s, r)
-	test.AssertMessageEventEqual(t, want, got)
-}
-
-func TestNewServerReceiver(t *testing.T) {
-	addr := ephemeralAddr(t)
-	r, err := NewServerReceiver(http.Server{Addr: addr})
-	require.NoError(t, err)
-	defer r.Close(context.Background())
-	s := testSender(t, "http://"+addr)
-	defer s.Close(context.Background())
-
-	want := binding.EventMessage(testEvent())
-	got := test.SendReceive(t, want, s, r)
-	test.AssertMessageEventEqual(t, want, got)
+var testEvent = ce.Event{
+	Context: ce.EventContextV1{
+		Type:   "com.example.MinEvent",
+		Source: types.URIRef{URL: url.URL{Scheme: "http", Host: "example.com", Path: "/source"}},
+		ID:     "min-event",
+		Time:   &types.Timestamp{Time: time.Date(2020, 03, 21, 12, 34, 56, 780000000, time.UTC)},
+	}.AsV1(),
 }
 
 func adapterEnv(sourceURI, sinkURI string) []string {
@@ -119,44 +158,22 @@ func waitFor(r io.Reader, what string) error {
 	return fmt.Errorf("Expected: %q\nGot ==\n%s\n--", what, out)
 }
 
-func TestAdapterMain(t *testing.T) {
-	// Use the test executable to simulate the cmd/receive_adapter process if env var
-	// t.Name() is set to "main" (trick from https://talks.golang.org/2014/testing.slide#23)
-	if os.Getenv(t.Name()) == "main" {
-		adapter.Main("sample-source", NewEnv, NewAdapter)
-		return
+type sink struct {
+	*httptest.Server
+	received chan ce.Event
+}
+
+func (s *sink) ServeHTTP(_ http.ResponseWriter, req *http.Request) {
+	e, err := decode(req)
+	if err != nil {
+		e.SetDataContentType(err.Error()) // invalidate the event with error message
 	}
+	s.received <- e
+}
 
-	// Use an adapter.Receiver as the sink for the adapter.
-	r := NewHandlerReceiver()
-	rSrv := httptest.NewServer(r)
-	defer rSrv.Close()
-	sinkURI := rSrv.URL
-
-	// Run a simulated receive_adapter main using the test executable.
-	sourceURI := "http://" + ephemeralAddr(t)
-	cmd := exec.Command(os.Args[0], "-test.run="+t.Name())
-	cmd.Env = append(os.Environ(),
-		t.Name()+"=main",
-		"SINK_URI="+sinkURI,
-		"SOURCE_URI="+sourceURI,
-		"NAMESPACE=namespace",
-		`K_METRICS_CONFIG={"domain":"x", "component":"x", "prometheusport":0, "configmap":{}}`,
-		`K_LOGGING_CONFIG={}`,
-	)
-
-	// Collect output, wait for "starting sample adapter"
-	pr, pw := io.Pipe()
-	cmd.Stdout, cmd.Stderr = pw, pw
-	require.NoError(t, cmd.Start())
-	defer func() { cmd.Process.Kill(); _, _ = cmd.Process.Wait() }()
-	require.NoError(t, waitFor(pr, "starting sample receive adapter"))
-	go func() { io.Copy(cmd.Stderr, pr) }() // Copy any further log output to stderr.
-
-	// Send to adapter source URI, verify event received at the sink.
-	s := testSender(t, sourceURI)
-	defer s.Close(context.Background())
-	want := binding.EventMessage(testEvent())
-	got := test.SendReceive(t, want, s, r)
-	test.AssertMessageEventEqual(t, want, got)
+func newSink() *sink {
+	s := &sink{}
+	s.received = make(chan ce.Event, 1) // Don't block
+	s.Server = httptest.NewServer(s)
+	return s
 }

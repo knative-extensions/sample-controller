@@ -15,8 +15,8 @@ limitations under the License.
 package main
 
 import (
+	"knative.dev/eventing/pkg/adapter"
 	myadapter "knative.dev/sample-controller/pkg/adapter"
-	"knative.dev/sample-controller/pkg/eventing/adapter"
 )
 
 func main() {
