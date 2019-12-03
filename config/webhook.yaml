@@ -58,3 +58,5 @@ spec:
           value: config-logging
         - name: METRICS_DOMAIN
           value: knative.dev/samples
+        - name: WEBHOOK_NAME
+          value: webhook

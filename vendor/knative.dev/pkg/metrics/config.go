@@ -27,14 +27,17 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
 	"go.opencensus.io/stats"
+	"go.uber.org/zap"
+<<<<<<< HEAD
+	"go.opencensus.io/stats"
+=======
+>>>>>>> master
 	"knative.dev/pkg/metrics/metricskey"
 )
 
 const (
-	DomainEnv        = "METRICS_DOMAIN"
-	ConfigMapNameEnv = "CONFIG_OBSERVABILITY_NAME"
+	DomainEnv = "METRICS_DOMAIN"
 )
 
 // metricsBackend specifies the backend to use for metrics
@@ -121,6 +124,7 @@ type StackdriverClientConfig struct {
 	// If UseSecret is false, Google Application Default Credentials
 	// will be used (https://cloud.google.com/docs/authentication/production).
 	UseSecret bool
+<<<<<<< HEAD
 }
 
 // NewStackdriverClientConfigFromMap creates a stackdriverClientConfig from the given map
@@ -131,6 +135,26 @@ func NewStackdriverClientConfigFromMap(config map[string]string) *StackdriverCli
 		ClusterName: config[StackdriverClusterNameKey],
 		UseSecret:   strings.EqualFold(config[StackdriverUseSecretKey], "true"),
 	}
+}
+
+// Record applies the `ros` Options to `ms` and then records the resulting
+// measurements in the metricsConfig's designated backend.
+func (mc *metricsConfig) Record(ctx context.Context, ms stats.Measurement, ros ...stats.Options) error {
+	if mc == nil || mc.recorder == nil {
+		return stats.RecordWithOptions(ctx, append(ros, stats.WithMeasurements(ms))...)
+=======
+}
+
+// NewStackdriverClientConfigFromMap creates a stackdriverClientConfig from the given map
+func NewStackdriverClientConfigFromMap(config map[string]string) *StackdriverClientConfig {
+	return &StackdriverClientConfig{
+		ProjectID:   config[StackdriverProjectIDKey],
+		GCPLocation: config[StackdriverGCPLocationKey],
+		ClusterName: config[StackdriverClusterNameKey],
+		UseSecret:   strings.EqualFold(config[StackdriverUseSecretKey], "true"),
+>>>>>>> master
+	}
+	return mc.recorder(ctx, ms, ros...)
 }
 
 // Record applies the `ros` Options to `ms` and then records the resulting
@@ -214,7 +238,11 @@ func createMetricsConfig(ops ExporterOptions, logger *zap.SugaredLogger) (*metri
 		if !allowCustomMetrics {
 			servingOrEventing := metricskey.KnativeRevisionMetrics.Union(
 				metricskey.KnativeTriggerMetrics)
+<<<<<<< HEAD
 			mc.recorder = func(ctx context.Context, ms stats.Measurement, ros... stats.Options) error {
+=======
+			mc.recorder = func(ctx context.Context, ms stats.Measurement, ros ...stats.Options) error {
+>>>>>>> master
 				metricType := path.Join(mc.stackdriverMetricTypePrefix, ms.Measure().Name())
 
 				if servingOrEventing.Has(metricType) {
@@ -246,15 +274,6 @@ func createMetricsConfig(ops ExporterOptions, logger *zap.SugaredLogger) (*metri
 	}
 
 	return &mc, nil
-}
-
-// ConfigMapName gets the name of the metrics ConfigMap
-func ConfigMapName() string {
-	cm := os.Getenv(ConfigMapNameEnv)
-	if cm == "" {
-		return "config-observability"
-	}
-	return cm
 }
 
 // Domain holds the metrics domain to use for surfacing metrics.
