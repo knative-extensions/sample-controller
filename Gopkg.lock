@@ -989,7 +989,8 @@
   revision = "5008bf6f8cd62f4b52816cfa99163fedb053d0be"
 
 [[projects]]
-  digest = "1:db5d7cf3da6cf21eae3c5b98139dd5408e9ad0dc370ba8f1e59c5834c303d34a"
+  branch = "master"
+  digest = "1:21f168f0b1eed03be1e28d463b35f23683697554be0e473f498318c9984efcc4"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1032,8 +1033,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "0a20941b320845202b52748fc0514069debcb1d5"
-  source = "github.com/yanweiguo/pkg"
+  revision = "94a34e416c4486376a21d934f4bfebd730c82c12"
 
 [[projects]]
   branch = "master"

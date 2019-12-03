@@ -42,13 +42,8 @@ type sdkClient struct {
 }
 
 // NewSDKClient returns an SDKClient that implements SDKOperations
-<<<<<<< HEAD
-func NewSDKClient() (SDKOperations, error) {
-	containerService, err := container.NewService(context.Background())
-=======
 func NewSDKClient(opts ...option.ClientOption) (SDKOperations, error) {
 	containerService, err := container.NewService(context.Background(), opts...)
->>>>>>> master
 	if err != nil {
 		return nil, fmt.Errorf("failed to create container service: '%v'", err)
 	}

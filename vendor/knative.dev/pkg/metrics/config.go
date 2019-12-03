@@ -29,10 +29,6 @@ import (
 
 	"go.opencensus.io/stats"
 	"go.uber.org/zap"
-<<<<<<< HEAD
-	"go.opencensus.io/stats"
-=======
->>>>>>> master
 	"knative.dev/pkg/metrics/metricskey"
 )
 
@@ -124,7 +120,6 @@ type StackdriverClientConfig struct {
 	// If UseSecret is false, Google Application Default Credentials
 	// will be used (https://cloud.google.com/docs/authentication/production).
 	UseSecret bool
-<<<<<<< HEAD
 }
 
 // NewStackdriverClientConfigFromMap creates a stackdriverClientConfig from the given map
@@ -135,26 +130,6 @@ func NewStackdriverClientConfigFromMap(config map[string]string) *StackdriverCli
 		ClusterName: config[StackdriverClusterNameKey],
 		UseSecret:   strings.EqualFold(config[StackdriverUseSecretKey], "true"),
 	}
-}
-
-// Record applies the `ros` Options to `ms` and then records the resulting
-// measurements in the metricsConfig's designated backend.
-func (mc *metricsConfig) Record(ctx context.Context, ms stats.Measurement, ros ...stats.Options) error {
-	if mc == nil || mc.recorder == nil {
-		return stats.RecordWithOptions(ctx, append(ros, stats.WithMeasurements(ms))...)
-=======
-}
-
-// NewStackdriverClientConfigFromMap creates a stackdriverClientConfig from the given map
-func NewStackdriverClientConfigFromMap(config map[string]string) *StackdriverClientConfig {
-	return &StackdriverClientConfig{
-		ProjectID:   config[StackdriverProjectIDKey],
-		GCPLocation: config[StackdriverGCPLocationKey],
-		ClusterName: config[StackdriverClusterNameKey],
-		UseSecret:   strings.EqualFold(config[StackdriverUseSecretKey], "true"),
->>>>>>> master
-	}
-	return mc.recorder(ctx, ms, ros...)
 }
 
 // Record applies the `ros` Options to `ms` and then records the resulting
@@ -238,11 +213,7 @@ func createMetricsConfig(ops ExporterOptions, logger *zap.SugaredLogger) (*metri
 		if !allowCustomMetrics {
 			servingOrEventing := metricskey.KnativeRevisionMetrics.Union(
 				metricskey.KnativeTriggerMetrics)
-<<<<<<< HEAD
-			mc.recorder = func(ctx context.Context, ms stats.Measurement, ros... stats.Options) error {
-=======
 			mc.recorder = func(ctx context.Context, ms stats.Measurement, ros ...stats.Options) error {
->>>>>>> master
 				metricType := path.Join(mc.stackdriverMetricTypePrefix, ms.Measure().Name())
 
 				if servingOrEventing.Has(metricType) {

@@ -58,11 +58,7 @@ func NewURIResolver(ctx context.Context, callback func(types.NamespacedName)) *U
 	return ret
 }
 
-<<<<<<< HEAD
-// URIFromDestination resolves a Destination into a URI string.
-=======
 // URIFromDestination resolves a v1beta1.Destination into a URI string.
->>>>>>> master
 func (r *URIResolver) URIFromDestination(dest duckv1beta1.Destination, parent interface{}) (string, error) {
 	var deprecatedObjectReference *corev1.ObjectReference
 	if !(dest.DeprecatedAPIVersion == "" && dest.DeprecatedKind == "" && dest.DeprecatedName == "" && dest.DeprecatedNamespace == "") {

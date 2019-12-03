@@ -95,13 +95,8 @@ func GetKnativeBrokerMonitoredResource(
 		Location:    gm.location,
 		ClusterName: gm.cluster,
 		// The rest resource labels are from metrics labels.
-<<<<<<< HEAD
 		NamespaceName: valueOrUnknown(metricskey.LabelNamespaceName, tags),
 		BrokerName:    valueOrUnknown(metricskey.LabelBrokerName, tags),
-=======
-		NamespaceName: valueOrUnknown(metricskey.LabelNamespaceName, tagsMap),
-		BrokerName:    valueOrUnknown(metricskey.LabelBrokerName, tagsMap),
->>>>>>> master
 	}
 
 	metricLabels := map[string]string{}
@@ -123,15 +118,9 @@ func GetKnativeTriggerMonitoredResource(
 		Location:    gm.location,
 		ClusterName: gm.cluster,
 		// The rest resource labels are from metrics labels.
-<<<<<<< HEAD
 		NamespaceName: valueOrUnknown(metricskey.LabelNamespaceName, tags),
 		BrokerName:    valueOrUnknown(metricskey.LabelBrokerName, tags),
 		TriggerName:   valueOrUnknown(metricskey.LabelTriggerName, tags),
-=======
-		NamespaceName: valueOrUnknown(metricskey.LabelNamespaceName, tagsMap),
-		BrokerName:    valueOrUnknown(metricskey.LabelBrokerName, tagsMap),
-		TriggerName:   valueOrUnknown(metricskey.LabelTriggerName, tagsMap),
->>>>>>> master
 	}
 
 	metricLabels := map[string]string{}
