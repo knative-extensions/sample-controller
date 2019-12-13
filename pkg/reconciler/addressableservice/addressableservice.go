@@ -39,6 +39,7 @@ type Reconciler struct {
 // Check that our Reconciler implements reconciler.Interface
 var _ Interface = (*Reconciler)(nil)
 
+// ReconcileKind implements addressableservice Interface.ReconcileKind.
 func (r *Reconciler) ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) error {
 	if asvc.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
@@ -47,7 +48,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, asvc *v1alpha1.Addressab
 	}
 	asvc.Status.InitializeConditions()
 
-	if err := r.reconcileService(ctx, asvc); err != nil {
+	if err := r.reconcileForService(ctx, asvc); err != nil {
 		return err
 	}
 
@@ -55,7 +56,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, asvc *v1alpha1.Addressab
 	return nil
 }
 
-func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.AddressableService) error {
+func (r *Reconciler) reconcileForService(ctx context.Context, asvc *v1alpha1.AddressableService) error {
 	logger := logging.FromContext(ctx)
 
 	if err := r.Tracker.TrackReference(tracker.Reference{

@@ -41,7 +41,14 @@ import (
 	listers "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
 )
 
+// Interface defines the strongly typed interfaces to be implemented by a
+// controller reconciling the Kind.
 type Interface interface {
+	// ReconcileKind implements custom logic to reconcile the Kind. Any changes
+	// to the objects .Status or .Finalizers will be propaged to the stored
+	// object. It is recommended that implementors do not call any update calls
+	// for the Kind inside of ReconcileKind, it is the resonsbility of the core
+	// controller to propagate those properties.
 	ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) error
 }
 
@@ -65,6 +72,8 @@ type Core struct {
 	// Reconciler is the implementation of the business logic of the resource.
 	Reconciler Interface
 
+	// FinalizerName is the name of the finalizer to use when finalizing the
+	// resource.
 	FinalizerName string
 }
 
@@ -102,6 +111,7 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 	// updates regardless of whether the reconciliation errored out.
 	reconcileErr := r.Reconciler.ReconcileKind(ctx, resource)
 
+	// Syncronize the finalizers.
 	if equality.Semantic.DeepEqual(original.Finalizers, resource.Finalizers) {
 		// If we didn't change finalizers then don't call updateFinalizers.
 	} else if _, updated, fErr := r.updateFinalizers(ctx, resource); fErr != nil {
@@ -114,6 +124,7 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 		r.Recorder.Eventf(resource, corev1.EventTypeNormal, "Updated", "Updated %q finalizers", resource.GetName())
 	}
 
+	// Syncronize the status.
 	if equality.Semantic.DeepEqual(original.Status, resource.Status) {
 		// If we didn't change anything then don't call updateStatus.
 		// This is important because the copy we loaded from the informer's
@@ -125,6 +136,8 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 			"Failed to update status for %q: %v", resource.Name, err)
 		return err
 	}
+
+	// Report the reconciler error, if any.
 	if reconcileErr != nil {
 		r.Recorder.Event(resource, corev1.EventTypeWarning, "InternalError", reconcileErr.Error())
 	}
