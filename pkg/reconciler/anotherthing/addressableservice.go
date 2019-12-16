@@ -24,12 +24,12 @@ import (
 	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
 
-// Reconciler implements controller.Reconciler for v1alpha1.AddressableService resources.
+// Reconciler implements controller.Reconciler for AddressableService resources.
 type Reconciler struct {
 	Core
 }
 
-// Check that our Reconciler implements reconciler.Interface
+// Check that our Reconciler implements Interface
 var _ Interface = (*Reconciler)(nil)
 
 // ReconcileKind implements Interface.ReconcileKind.

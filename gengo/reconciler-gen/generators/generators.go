@@ -80,11 +80,106 @@ func extractTag(comments []string) *tagValue {
 	return tag
 }
 
+type lowercaseNamer struct{}
+
+func (r *lowercaseNamer) Name(t *types.Type) string {
+	return strings.ToLower(t.Name.Name)
+}
+
+type clientsetNamer struct{}
+
+func (r *clientsetNamer) Name(t *types.Type) string {
+	// TODO
+	return strings.ToLower(t.Name.Name)
+}
+
 // NameSystems returns the name system used by the generators in this package.
 func NameSystems() namer.NameSystems {
-	return namer.NameSystems{
-		"raw": namer.NewRawNamer("", nil),
+	pluralExceptions := map[string]string{
+		"Endpoints": "Endpoints",
 	}
+	lowercasePluralNamer := namer.NewAllLowercasePluralNamer(pluralExceptions)
+
+	publicNamer := &ExceptionNamer{
+		Exceptions: map[string]string{
+			// these exceptions are used to deconflict the generated code
+			// you can put your fully qualified package like
+			// to generate a name that doesn't conflict with your group.
+			// "k8s.io/apis/events/v1beta1.Event": "EventResource"
+		},
+		KeyFunc: func(t *types.Type) string {
+			return t.Name.Package + "." + t.Name.Name
+		},
+		Delegate: namer.NewPublicNamer(0),
+	}
+	privateNamer := &ExceptionNamer{
+		Exceptions: map[string]string{
+			// these exceptions are used to deconflict the generated code
+			// you can put your fully qualified package like
+			// to generate a name that doesn't conflict with your group.
+			// "k8s.io/apis/events/v1beta1.Event": "eventResource"
+		},
+		KeyFunc: func(t *types.Type) string {
+			return t.Name.Package + "." + t.Name.Name
+		},
+		Delegate: namer.NewPrivateNamer(0),
+	}
+	publicPluralNamer := &ExceptionNamer{
+		Exceptions: map[string]string{
+			// these exceptions are used to deconflict the generated code
+			// you can put your fully qualified package like
+			// to generate a name that doesn't conflict with your group.
+			// "k8s.io/apis/events/v1beta1.Event": "EventResource"
+		},
+		KeyFunc: func(t *types.Type) string {
+			return t.Name.Package + "." + t.Name.Name
+		},
+		Delegate: namer.NewPublicPluralNamer(pluralExceptions),
+	}
+	privatePluralNamer := &ExceptionNamer{
+		Exceptions: map[string]string{
+			// you can put your fully qualified package like
+			// to generate a name that doesn't conflict with your group.
+			// "k8s.io/apis/events/v1beta1.Event": "eventResource"
+			// these exceptions are used to deconflict the generated code
+			"k8s.io/apis/events/v1beta1.Event":        "eventResources",
+			"k8s.io/kubernetes/pkg/apis/events.Event": "eventResources",
+		},
+		KeyFunc: func(t *types.Type) string {
+			return t.Name.Package + "." + t.Name.Name
+		},
+		Delegate: namer.NewPrivatePluralNamer(pluralExceptions),
+	}
+
+	return namer.NameSystems{
+		"singularKind":       namer.NewPublicNamer(0),
+		"raw":                namer.NewRawNamer("", nil),
+		"publicPlural":       publicPluralNamer,
+		"privatePlural":      privatePluralNamer,
+		"public":             publicNamer,
+		"private":            privateNamer,
+		"allLowercase":       &lowercaseNamer{},
+		"allLowercasePlural": lowercasePluralNamer,
+		"clientset":          &clientsetNamer{},
+	}
+}
+
+// ExceptionNamer allows you specify exceptional cases with exact names.  This allows you to have control
+// for handling various conflicts, like group and resource names for instance.
+type ExceptionNamer struct {
+	Exceptions map[string]string
+	KeyFunc    func(*types.Type) string
+
+	Delegate namer.Namer
+}
+
+// Name provides the requested name for a type.
+func (n *ExceptionNamer) Name(t *types.Type) string {
+	key := n.KeyFunc(t)
+	if exception, ok := n.Exceptions[key]; ok {
+		return exception
+	}
+	return n.Delegate.Name(t)
 }
 
 // DefaultNameSystem returns the default name system for ordering the types to be

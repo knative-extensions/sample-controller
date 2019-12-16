@@ -93,9 +93,8 @@ func (g *genController) Init(c *generator.Context, w io.Writer) error {
 	name := kind[strings.LastIndex(kind, ".")+1:]
 
 	m := map[string]interface{}{
-		"resourceName":   c.Universe.Type(types.Name{Name: strings.ToLower(name), Package: g.targetPackage}),
-		"resourceNames":  c.Universe.Type(types.Name{Name: UnsafeGuessKindToResource(name), Package: g.targetPackage}),
-		"resource":       c.Universe.Type(types.Name{Package: pkg, Name: name}),
+		"type": c.Universe.Type(types.Name{Package: pkg, Name: name}),
+		// Methods.
 		"controllerImpl": c.Universe.Type(types.Name{Package: "knative.dev/pkg/controller", Name: "Impl"}),
 		"loggingFromContext": c.Universe.Function(types.Name{
 			Package: "knative.dev/pkg/logging",
@@ -127,14 +126,14 @@ func (g *genController) GenerateType(c *generator.Context, t *types.Type, w io.W
 var controllerFactory = `
 
 const (
-	controllerAgentName = "{{.resourceName|raw}}-controller"
-	finalizerName       = "{{.resourceName|raw}}"
+	controllerAgentName = "{{.type|allLowercase}}-controller"
+	finalizerName       = "{{.type|allLowercase}}"
 )
 
 func NewImpl(ctx context.Context, r *Reconciler) *{{.controllerImpl|raw}} {
 	logger := {{.loggingFromContext|raw}}(ctx)
 
-	impl := controller.NewImpl(r, logger, "{{.resourceNames|raw}}")
+	impl := controller.NewImpl(r, logger, "{{.type|allLowercasePlural}}")
 
 	informer := {{.informerGet|raw}}(ctx)
 

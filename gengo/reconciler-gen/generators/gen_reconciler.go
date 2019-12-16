@@ -87,20 +87,36 @@ func (g *genReconciler) Init(c *generator.Context, w io.Writer) error {
 
 	sw := generator.NewSnippetWriter(w, c, "{{", "}}")
 
-	klog.V(5).Infof("processing kind %v", g.kind)
-
 	pkg := kind[:strings.LastIndex(kind, ".")]
 	name := kind[strings.LastIndex(kind, ".")+1:]
 
+	// TODO: inject this.
+	clientSet := "knative.dev/sample-controller/pkg/client/clientset/versioned"
+	listerName := "AddressableServiceLister"
+	listerPkg := "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
+
 	m := map[string]interface{}{
-		"resourceName":   c.Universe.Type(types.Name{Name: strings.ToLower(name), Package: g.targetPackage}),
-		"resourceNames":  c.Universe.Type(types.Name{Name: UnsafeGuessKindToResource(name), Package: g.targetPackage}),
+		// types
+		"type": c.Universe.Type(types.Name{Package: pkg, Name: name}),
+		// TODO
+		"clientsetInterface":   c.Universe.Type(types.Name{Name: "Interface", Package: clientSet}),
+		"resourceLister":       c.Universe.Type(types.Name{Package: listerPkg, Name: listerName}),
+		"trackerInterface":     c.Universe.Type(types.Name{Name: "Interface", Package: "knative.dev/pkg/tracker"}),
+		"controllerReconciler": c.Universe.Type(types.Name{Name: "Reconciler", Package: "knative.dev/pkg/controller"}),
+		// K8s types
+		"recordEventRecorder": c.Universe.Type(types.Name{Name: "EventRecorder", Package: "k8s.io/client-go/tools/record"}),
+		// methods
 		"resource":       c.Universe.Type(types.Name{Package: pkg, Name: name}),
 		"controllerImpl": c.Universe.Type(types.Name{Package: "knative.dev/pkg/controller", Name: "Impl"}),
 		"loggingFromContext": c.Universe.Function(types.Name{
 			Package: "knative.dev/pkg/logging",
 			Name:    "FromContext",
 		}),
+		"cacheSplitMetaNamespaceKey": c.Universe.Function(types.Name{
+			Package: "k8s.io/client-go/tools/cache",
+			Name:    "SplitMetaNamespaceKey",
+		}),
+
 		"clientGet": c.Universe.Function(types.Name{
 			Package: g.client,
 			Name:    "Get",
@@ -129,29 +145,29 @@ var reconcilerFactory = `
 // controller reconciling the Kind.
 type Interface interface {
 	// ReconcileKind implements custom logic to reconcile the Kind. Any changes
-	// to the objects .Status or .Finalizers will be propaged to the stored
+	// to the objects .Status or .Finalizers will be propagated to the stored
 	// object. It is recommended that implementors do not call any update calls
-	// for the Kind inside of ReconcileKind, it is the resonsbility of the core
+	// for the Kind inside of ReconcileKind, it is the responsibility of the core
 	// controller to propagate those properties.
 	ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) error
 }
 
-// Reconciler implements controller.Reconciler for AddressableService resources.
+// Reconciler implements controller.Reconciler for {{.kind|resource}} resources.
 type Core struct {
 	// Client is used to write back status updates.
-	Client clientset.Interface
+	Client {{.clientsetInterface|raw}}
 
 	// Listers index properties about resources
-	Lister listers.AddressableServiceLister
+	Lister {{.resourceLister|raw}}
 
 	// The tracker builds an index of what resources are watching other
 	// resources so that we can immediately react to changes to changes in
 	// tracked resources.
-	Tracker tracker.Interface
+	Tracker {{.trackerInterface|raw}}
 
 	// Recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
-	Recorder record.EventRecorder
+	Recorder {{.recordEventRecorder|raw}}
 
 	// Reconciler is the implementation of the business logic of the resource.
 	Reconciler Interface
@@ -166,10 +182,10 @@ var _ controller.Reconciler = (*Core)(nil)
 
 // Reconcile implements controller.Reconciler
 func (r *Core) Reconcile(ctx context.Context, key string) error {
-	logger := logging.FromContext(ctx)
+	logger := {{.loggingFromContext|raw}}(ctx)
 
 	// Convert the namespace/name string into a distinct namespace and name
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	namespace, name, err := {{.cacheSplitMetaNamespaceKey|raw}}(key)
 	if err != nil {
 		logger.Errorf("invalid resource key: %s", key)
 		return nil
@@ -195,7 +211,7 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 	// updates regardless of whether the reconciliation errored out.
 	reconcileErr := r.Reconciler.ReconcileKind(ctx, resource)
 
-	// Syncronize the finalizers.
+	// Synchronize the finalizers.
 	if equality.Semantic.DeepEqual(original.Finalizers, resource.Finalizers) {
 		// If we didn't change finalizers then don't call updateFinalizers.
 	} else if _, updated, fErr := r.updateFinalizers(ctx, resource); fErr != nil {
@@ -208,13 +224,13 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 		r.Recorder.Eventf(resource, corev1.EventTypeNormal, "Updated", "Updated %q finalizers", resource.GetName())
 	}
 
-	// Syncronize the status.
+	// Synchronize the status.
 	if equality.Semantic.DeepEqual(original.Status, resource.Status) {
 		// If we didn't change anything then don't call updateStatus.
 		// This is important because the copy we loaded from the informer's
 		// cache may be stale and we don't want to overwrite a prior update
 		// to status with this stale state.
-	} else if _, err = r.updateStatus(resource); err != nil {
+	} else if err = r.updateStatus(original, resource); err != nil {
 		logger.Warnw("Failed to update resource status", zap.Error(err))
 		r.Recorder.Eventf(resource, corev1.EventTypeWarning, "UpdateFailed",
 			"Failed to update status for %q: %v", resource.Name, err)
@@ -228,21 +244,39 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 	return reconcileErr
 }
 
-// Update the Status of the resource.  Caller is responsible for checking
-// for semantic differences before calling.
-func (r *Core) updateStatus(desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, error) {
-	actual, err := r.Lister.AddressableServices(desired.Namespace).Get(desired.Name)
-	if err != nil {
-		return nil, err
-	}
-	// If there's nothing to update, just return.
-	if reflect.DeepEqual(actual.Status, desired.Status) {
-		return actual, nil
-	}
-	// Don't modify the informers copy
-	existing := actual.DeepCopy()
-	existing.Status = desired.Status
-	return r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).UpdateStatus(existing)
+func (r *Core) updateStatus(existing *v1alpha1.AddressableService, desired *v1alpha1.AddressableService) error {
+	existing = existing.DeepCopy()
+	return RetryUpdateConflicts(func(attempts int) (err error) {
+		// The first iteration tries to use the informer's state, subsequent attempts fetch the latest state via API.
+		if attempts > 0 {
+			existing, err = r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Get(desired.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+		}
+
+		// If there's nothing to update, just return.
+		if reflect.DeepEqual(existing.Status, desired.Status) {
+			return nil
+		}
+
+		existing.Status = desired.Status
+		_, err = r.Client.SamplesV1alpha1().AddressableServices(existing.Namespace).UpdateStatus(existing)
+		return err
+	})
+}
+
+
+// TODO: move this to knative.dev/pkg/reconciler
+// RetryUpdateConflicts retries the inner function if it returns conflict errors.
+// This can be used to retry status updates without constantly reenqueuing keys.
+func RetryUpdateConflicts(updater func(int) error) error {
+	attempts := 0
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		err := updater(attempts)
+		attempts++
+		return err
+	})
 }
 
 // Update the Finalizers of the resource.

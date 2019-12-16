@@ -87,33 +87,7 @@ func (g *genStubController) Init(c *generator.Context, w io.Writer) error {
 
 	sw := generator.NewSnippetWriter(w, c, "{{", "}}")
 
-	klog.V(5).Infof("processing kind %v", g.kind)
-
-	pkg := kind[:strings.LastIndex(kind, ".")]
-	name := kind[strings.LastIndex(kind, ".")+1:]
-
-	m := map[string]interface{}{
-		"resourceName":   c.Universe.Type(types.Name{Name: strings.ToLower(name), Package: g.targetPackage}),
-		"resourceNames":  c.Universe.Type(types.Name{Name: UnsafeGuessKindToResource(name), Package: g.targetPackage}),
-		"resource":       c.Universe.Type(types.Name{Package: pkg, Name: name}),
-		"controllerImpl": c.Universe.Type(types.Name{Package: "knative.dev/pkg/controller", Name: "Impl"}),
-		"loggingFromContext": c.Universe.Function(types.Name{
-			Package: "knative.dev/pkg/logging",
-			Name:    "FromContext",
-		}),
-		"clientGet": c.Universe.Function(types.Name{
-			Package: g.client,
-			Name:    "Get",
-		}),
-		"informerGet": c.Universe.Function(types.Name{
-			Package: g.informer,
-			Name:    "Get",
-		}),
-		"corev1EventSource": c.Universe.Function(types.Name{
-			Package: "k8s.io/api/core/v1",
-			Name:    "EventSource",
-		}),
-	}
+	m := map[string]interface{}{}
 
 	sw.Do(stubControllerFactory, m)
 

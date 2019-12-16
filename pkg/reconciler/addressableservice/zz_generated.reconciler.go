@@ -161,6 +161,40 @@ func (r *Core) updateStatus(desired *v1alpha1.AddressableService) (*v1alpha1.Add
 	return r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).UpdateStatus(existing)
 }
 
+// TODO: move this to knative.dev/pkg/reconciler
+// RetryUpdateConflicts retries the inner function if it returns conflict errors.
+// This can be used to retry status updates without constantly reenqueuing keys.
+func RetryUpdateConflicts(updater func(int) error) error {
+	attempts := 0
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		err := updater(attempts)
+		attempts++
+		return err
+	})
+}
+
+func (r *Core) updateStatus(existing *v1alpha1.AddressableService, desired *v1alpha1.AddressableService) error {
+	existing = existing.DeepCopy()
+	return RetryUpdateConflicts(func(attempts int) (err error) {
+		// The first iteration tries to use the informer's state, subsequent attempts fetch the latest state via API.
+		if attempts > 0 {
+			existing, err = r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Get(desired.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+		}
+
+		// If there's nothing to update, just return.
+		if reflect.DeepEqual(existing.Status, desired.Status) {
+			return nil
+		}
+
+		existing.Status = desired.Status
+		_, err = r.Client.SamplesV1alpha1().AddressableServices(existing.Namespace).UpdateStatus(existing)
+		return err
+	})
+}
+
 // Update the Finalizers of the resource.
 func (r *Core) updateFinalizers(ctx context.Context, desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, bool, error) {
 	actual, err := r.Lister.AddressableServices(desired.Namespace).Get(desired.Name)

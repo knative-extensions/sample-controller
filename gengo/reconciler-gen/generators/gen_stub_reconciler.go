@@ -93,26 +93,7 @@ func (g *genStubReconciler) Init(c *generator.Context, w io.Writer) error {
 	name := kind[strings.LastIndex(kind, ".")+1:]
 
 	m := map[string]interface{}{
-		"resourceName":   c.Universe.Type(types.Name{Name: strings.ToLower(name), Package: g.targetPackage}),
-		"resourceNames":  c.Universe.Type(types.Name{Name: UnsafeGuessKindToResource(name), Package: g.targetPackage}),
-		"resource":       c.Universe.Type(types.Name{Package: pkg, Name: name}),
-		"controllerImpl": c.Universe.Type(types.Name{Package: "knative.dev/pkg/controller", Name: "Impl"}),
-		"loggingFromContext": c.Universe.Function(types.Name{
-			Package: "knative.dev/pkg/logging",
-			Name:    "FromContext",
-		}),
-		"clientGet": c.Universe.Function(types.Name{
-			Package: g.client,
-			Name:    "Get",
-		}),
-		"informerGet": c.Universe.Function(types.Name{
-			Package: g.informer,
-			Name:    "Get",
-		}),
-		"corev1EventSource": c.Universe.Function(types.Name{
-			Package: "k8s.io/api/core/v1",
-			Name:    "EventSource",
-		}),
+		"type": c.Universe.Type(types.Name{Package: pkg, Name: name}),
 	}
 
 	sw.Do(stubReconcilerFactory, m)
@@ -125,16 +106,16 @@ func (g *genStubReconciler) GenerateType(c *generator.Context, t *types.Type, w 
 }
 
 var stubReconcilerFactory = `
-// Reconciler implements controller.Reconciler for {{.resource|raw}} resources.
+// Reconciler implements controller.Reconciler for {{.type|singularKind}} resources.
 type Reconciler struct {
 	Core
 }
 
-// Check that our Reconciler implements reconciler.Interface
+// Check that our Reconciler implements Interface
 var _ Interface = (*Reconciler)(nil)
 
 // ReconcileKind implements Interface.ReconcileKind.
-func (r *Reconciler) ReconcileKind(ctx context.Context, o *{{.resource|raw}}) error {
+func (r *Reconciler) ReconcileKind(ctx context.Context, o *{{.type|raw}}) error {
 	if o.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
 		// When a controller needs finalizer handling, it would go here.
