@@ -31,25 +31,29 @@ type genStubReconciler struct {
 	generator.DefaultGen
 	targetPackage string
 
-	kind     string
-	client   string
-	informer string
+	kind              string
+	injectionClient   string
+	injectionInformer string
+	lister            string
+	clientset         string
 
 	imports      namer.ImportTracker
 	typesForInit []*types.Type
 }
 
-func NewGenStubReconciler(sanitizedName, targetPackage string, kind, client, informer string) generator.Generator {
+func NewGenStubReconciler(sanitizedName, targetPackage string, kind, injectionClient, injectionInformer, lister, clientset string) generator.Generator {
 	return &genStubReconciler{
 		DefaultGen: generator.DefaultGen{
 			OptionalName: sanitizedName,
 		},
-		targetPackage: targetPackage,
-		kind:          kind,
-		client:        client,
-		informer:      informer,
-		imports:       generator.NewImportTracker(),
-		typesForInit:  make([]*types.Type, 0),
+		targetPackage:     targetPackage,
+		kind:              kind,
+		injectionClient:   injectionClient,
+		injectionInformer: injectionInformer,
+		lister:            lister,
+		clientset:         clientset,
+		imports:           generator.NewImportTracker(),
+		typesForInit:      make([]*types.Type, 0),
 	}
 }
 

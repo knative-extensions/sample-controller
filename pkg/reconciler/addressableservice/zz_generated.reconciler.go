@@ -29,9 +29,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
-	cache "k8s.io/client-go/tools/cache"
-	record "k8s.io/client-go/tools/record"
-	retry "k8s.io/client-go/util/retry"
+	cache "k8s.io/injectionClient-go/tools/cache"
+	record "k8s.io/injectionClient-go/tools/record"
+	retry "k8s.io/injectionClient-go/util/retry"
 	"knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
 	tracker "knative.dev/pkg/tracker"
@@ -127,7 +127,7 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 	// Synchronize the status.
 	if equality.Semantic.DeepEqual(original.Status, resource.Status) {
 		// If we didn't change anything then don't call updateStatus.
-		// This is important because the copy we loaded from the informer's
+		// This is important because the copy we loaded from the injectionInformer's
 		// cache may be stale and we don't want to overwrite a prior update
 		// to status with this stale state.
 	} else if err = r.updateStatus(original, resource); err != nil {
@@ -147,7 +147,7 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 func (r *Core) updateStatus(existing *v1alpha1.AddressableService, desired *v1alpha1.AddressableService) error {
 	existing = existing.DeepCopy()
 	return RetryUpdateConflicts(func(attempts int) (err error) {
-		// The first iteration tries to use the informer's state, subsequent attempts fetch the latest state via API.
+		// The first iteration tries to use the injectionInformer's state, subsequent attempts fetch the latest state via API.
 		if attempts > 0 {
 			existing, err = r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Get(desired.Name, metav1.GetOptions{})
 			if err != nil {

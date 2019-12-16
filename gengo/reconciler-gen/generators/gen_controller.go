@@ -31,25 +31,29 @@ type genController struct {
 	generator.DefaultGen
 	targetPackage string
 
-	kind     string
-	client   string
-	informer string
+	kind              string
+	injectionClient   string
+	injectionInformer string
+	lister            string
+	clientset         string
 
 	imports      namer.ImportTracker
 	typesForInit []*types.Type
 }
 
-func NewGenController(sanitizedName, targetPackage string, kind, client, informer string) generator.Generator {
+func NewGenController(sanitizedName, targetPackage string, kind, injectionClient, injectionInformer, lister, clientset string) generator.Generator {
 	return &genController{
 		DefaultGen: generator.DefaultGen{
 			OptionalName: sanitizedName,
 		},
-		targetPackage: targetPackage,
-		kind:          kind,
-		client:        client,
-		informer:      informer,
-		imports:       generator.NewImportTracker(),
-		typesForInit:  make([]*types.Type, 0),
+		targetPackage:     targetPackage,
+		kind:              kind,
+		injectionClient:   injectionClient,
+		injectionInformer: injectionInformer,
+		lister:            lister,
+		clientset:         clientset,
+		imports:           generator.NewImportTracker(),
+		typesForInit:      make([]*types.Type, 0),
 	}
 }
 
@@ -102,11 +106,11 @@ func (g *genController) Init(c *generator.Context, w io.Writer) error {
 			Name:    "FromContext",
 		}),
 		"clientGet": c.Universe.Function(types.Name{
-			Package: g.client,
+			Package: g.injectionClient,
 			Name:    "Get",
 		}),
 		"informerGet": c.Universe.Function(types.Name{
-			Package: g.informer,
+			Package: g.injectionInformer,
 			Name:    "Get",
 		}),
 		"corev1EventSource": c.Universe.Function(types.Name{
@@ -136,11 +140,11 @@ func NewImpl(ctx context.Context, r *Reconciler) *{{.controllerImpl|raw}} {
 
 	impl := controller.NewImpl(r, logger, "{{.type|allLowercasePlural}}")
 
-	informer := {{.informerGet|raw}}(ctx)
+	injectionInformer := {{.informerGet|raw}}(ctx)
 
 	r.Core = Core{
 		Client:  {{.clientGet|raw}}(ctx),
-		Lister:  informer.Lister(),
+		Lister:  injectionInformer.Lister(),
 		Tracker: tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx)),
 		Recorder: record.NewBroadcaster().NewRecorder(
 			scheme.Scheme, {{.corev1EventSource|raw}}{Component: controllerAgentName}),
@@ -149,7 +153,7 @@ func NewImpl(ctx context.Context, r *Reconciler) *{{.controllerImpl|raw}} {
 	}
 
 	logger.Info("Setting up core event handlers")
-	informer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	injectionInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	return impl
 }

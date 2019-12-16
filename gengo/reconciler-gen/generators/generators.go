@@ -33,19 +33,23 @@ import (
 
 // This is the comment tag that carries parameters for deep-copy generation.
 const (
-	tagEnabledName  = "genreconciler"
-	kindTagName     = tagEnabledName + ":kind"
-	stubsTagName    = tagEnabledName + ":stubs"
-	clientTagName   = tagEnabledName + ":client"
-	informerTagName = tagEnabledName + ":informer"
+	tagEnabledName           = "genreconciler"
+	kindTagName              = tagEnabledName + ":kind"
+	stubsTagName             = tagEnabledName + ":stubs"
+	injectionClientTagName   = tagEnabledName + ":injectionClient"
+	injectionInformerTagName = tagEnabledName + ":injectionInformer"
+	listerTagName            = tagEnabledName + ":lister"
+	clientsetTagName         = tagEnabledName + ":clientset"
 )
 
 // enabledTagValue holds parameters from a tagName tag.
 type tagValue struct {
-	stubs    bool
-	kind     string
-	client   string
-	informer string
+	stubs             bool
+	kind              string
+	injectionClient   string
+	injectionInformer string
+	lister            string
+	clientset         string
 }
 
 func extractTag(comments []string) *tagValue {
@@ -70,12 +74,20 @@ func extractTag(comments []string) *tagValue {
 		tag.stubs = true
 	}
 
-	if v := tags[clientTagName]; v != nil {
-		tag.client = v[0]
+	if v := tags[injectionClientTagName]; v != nil {
+		tag.injectionClient = v[0]
 	}
 
-	if v := tags[informerTagName]; v != nil {
-		tag.informer = v[0]
+	if v := tags[injectionInformerTagName]; v != nil {
+		tag.injectionInformer = v[0]
+	}
+
+	if v := tags[listerTagName]; v != nil {
+		tag.lister = v[0]
+	}
+
+	if v := tags[clientsetTagName]; v != nil {
+		tag.clientset = v[0]
 	}
 
 	return tag
@@ -236,8 +248,8 @@ func Packages(context *generator.Context, arguments *args.GeneratorArgs) generat
 				HeaderText:  header,
 				GeneratorFunc: func(c *generator.Context) (generators []generator.Generator) {
 					return []generator.Generator{
-						NewGenController(arguments.OutputFileBaseName+".controller", pkg.Path, ptag.kind, ptag.client, ptag.informer),
-						NewGenReconciler(arguments.OutputFileBaseName+".reconciler", pkg.Path, ptag.kind, ptag.client, ptag.informer),
+						NewGenController(arguments.OutputFileBaseName+".controller", pkg.Path, ptag.kind, ptag.injectionClient, ptag.injectionInformer, ptag.lister, ptag.clientset),
+						NewGenReconciler(arguments.OutputFileBaseName+".reconciler", pkg.Path, ptag.kind, ptag.injectionClient, ptag.injectionInformer, ptag.lister, ptag.clientset),
 					}
 				},
 				FilterFunc: func(c *generator.Context, t *types.Type) bool {
@@ -256,8 +268,8 @@ func Packages(context *generator.Context, arguments *args.GeneratorArgs) generat
 					HeaderText:  editHeader,
 					GeneratorFunc: func(c *generator.Context) (generators []generator.Generator) {
 						return []generator.Generator{
-							NewGenStubController("controller", pkg.Path, ptag.kind, ptag.client, ptag.informer),
-							NewGenStubReconciler(strings.ToLower(name), pkg.Path, ptag.kind, ptag.client, ptag.informer),
+							NewGenStubController("controller", pkg.Path, ptag.kind, ptag.injectionClient, ptag.injectionInformer, ptag.lister, ptag.clientset),
+							NewGenStubReconciler(strings.ToLower(name), pkg.Path, ptag.kind, ptag.injectionClient, ptag.injectionInformer, ptag.lister, ptag.clientset),
 						}
 					},
 					FilterFunc: func(c *generator.Context, t *types.Type) bool {

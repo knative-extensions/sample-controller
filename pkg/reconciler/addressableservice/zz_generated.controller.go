@@ -29,8 +29,6 @@ import (
 	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
 	"knative.dev/pkg/tracker"
-	client "knative.dev/sample-controller/pkg/client/injection/client"
-	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
 )
 
 const (
@@ -43,11 +41,11 @@ func NewImpl(ctx context.Context, r *Reconciler) *controller.Impl {
 
 	impl := controller.NewImpl(r, logger, "addressableservices")
 
-	informer := addressableservice.Get(ctx)
+	injectionInformer := unnameable_DeclarationOf(ctx)
 
 	r.Core = Core{
-		Client:  client.Get(ctx),
-		Lister:  informer.Lister(),
+		Client:  unnameable_DeclarationOf(ctx),
+		Lister:  injectionInformer.Lister(),
 		Tracker: tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx)),
 		Recorder: record.NewBroadcaster().NewRecorder(
 			scheme.Scheme, v1.EventSource{Component: controllerAgentName}),
@@ -56,7 +54,7 @@ func NewImpl(ctx context.Context, r *Reconciler) *controller.Impl {
 	}
 
 	logger.Info("Setting up core event handlers")
-	informer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	injectionInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	return impl
 }

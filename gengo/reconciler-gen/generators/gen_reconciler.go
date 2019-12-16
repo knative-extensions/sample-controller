@@ -31,25 +31,29 @@ type genReconciler struct {
 	generator.DefaultGen
 	targetPackage string
 
-	kind     string
-	client   string
-	informer string
+	kind              string
+	injectionClient   string
+	injectionInformer string
+	lister            string
+	clientset         string
 
 	imports      namer.ImportTracker
 	typesForInit []*types.Type
 }
 
-func NewGenReconciler(sanitizedName, targetPackage string, kind, client, informer string) generator.Generator {
+func NewGenReconciler(sanitizedName, targetPackage string, kind, injectionClient, injectionInformer, lister, clientset string) generator.Generator {
 	return &genReconciler{
 		DefaultGen: generator.DefaultGen{
 			OptionalName: sanitizedName,
 		},
-		targetPackage: targetPackage,
-		kind:          kind,
-		client:        client,
-		informer:      informer,
-		imports:       generator.NewImportTracker(),
-		typesForInit:  make([]*types.Type, 0),
+		targetPackage:     targetPackage,
+		kind:              kind,
+		injectionClient:   injectionClient,
+		injectionInformer: injectionInformer,
+		lister:            lister,
+		clientset:         clientset,
+		imports:           generator.NewImportTracker(),
+		typesForInit:      make([]*types.Type, 0),
 	}
 }
 
@@ -91,31 +95,26 @@ func (g *genReconciler) Init(c *generator.Context, w io.Writer) error {
 	pkg := g.kind[:strings.LastIndex(g.kind, ".")]
 	name := g.kind[strings.LastIndex(g.kind, ".")+1:]
 
-	// TODO: inject this.
-	clientset := "knative.dev/sample-controller/pkg/client/clientset/versioned"
-	listerName := name + "Lister"
-	listerPkg := "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
-
 	m := map[string]interface{}{
 		"type": c.Universe.Type(types.Name{Package: pkg, Name: name}),
 		// Deps
-		"clientsetInterface":   c.Universe.Type(types.Name{Name: "Interface", Package: clientset}),
-		"resourceLister":       c.Universe.Type(types.Name{Name: listerName, Package: listerPkg}),
+		"clientsetInterface":   c.Universe.Type(types.Name{Name: "Interface", Package: g.clientset}),
+		"resourceLister":       c.Universe.Type(types.Name{Name: name + "Lister", Package: g.lister}),
 		"trackerInterface":     c.Universe.Type(types.Name{Name: "Interface", Package: "knative.dev/pkg/tracker"}),
 		"controllerReconciler": c.Universe.Type(types.Name{Name: "Reconciler", Package: "knative.dev/pkg/controller"}),
 		// K8s types
-		"recordEventRecorder": c.Universe.Type(types.Name{Name: "EventRecorder", Package: "k8s.io/client-go/tools/record"}),
+		"recordEventRecorder": c.Universe.Type(types.Name{Name: "EventRecorder", Package: "k8s.io/injectionClient-go/tools/record"}),
 		// methods
 		"loggingFromContext": c.Universe.Function(types.Name{
 			Package: "knative.dev/pkg/logging",
 			Name:    "FromContext",
 		}),
 		"cacheSplitMetaNamespaceKey": c.Universe.Function(types.Name{
-			Package: "k8s.io/client-go/tools/cache",
+			Package: "k8s.io/injectionClient-go/tools/cache",
 			Name:    "SplitMetaNamespaceKey",
 		}),
 		"retryRetryOnConflict": c.Universe.Function(types.Name{
-			Package: "k8s.io/client-go/util/retry",
+			Package: "k8s.io/injectionClient-go/util/retry",
 			Name:    "RetryOnConflict",
 		}),
 	}
@@ -224,7 +223,7 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 	// Synchronize the status.
 	if equality.Semantic.DeepEqual(original.Status, resource.Status) {
 		// If we didn't change anything then don't call updateStatus.
-		// This is important because the copy we loaded from the informer's
+		// This is important because the copy we loaded from the injectionInformer's
 		// cache may be stale and we don't want to overwrite a prior update
 		// to status with this stale state.
 	} else if err = r.updateStatus(original, resource); err != nil {
@@ -246,7 +245,7 @@ var reconcilerStatusFactory = `
 func (r *Core) updateStatus(existing *{{.type|raw}}, desired *{{.type|raw}}) error {
 	existing = existing.DeepCopy()
 	return RetryUpdateConflicts(func(attempts int) (err error) {
-		// The first iteration tries to use the informer's state, subsequent attempts fetch the latest state via API.
+		// The first iteration tries to use the injectionInformer's state, subsequent attempts fetch the latest state via API.
 		if attempts > 0 {
 			existing, err = r.Client.{{.type|versionedClientset}}().{{.type|apiGroup}}(desired.Namespace).Get(desired.Name, metav1.GetOptions{})
 			if err != nil {
