@@ -84,15 +84,12 @@ func (g *genStubReconciler) Imports(c *generator.Context) (imports []string) {
 }
 
 func (g *genStubReconciler) Init(c *generator.Context, w io.Writer) error {
-	kind := g.kind
-	klog.Infof("Generating genreconciler function for kind %v", kind)
+	klog.Infof("Generating stub reconciler for kind %v", g.kind)
 
 	sw := generator.NewSnippetWriter(w, c, "{{", "}}")
 
-	klog.V(5).Infof("processing kind %v", g.kind)
-
-	pkg := kind[:strings.LastIndex(kind, ".")]
-	name := kind[strings.LastIndex(kind, ".")+1:]
+	pkg := g.kind[:strings.LastIndex(g.kind, ".")]
+	name := g.kind[strings.LastIndex(g.kind, ".")+1:]
 
 	m := map[string]interface{}{
 		"type": c.Universe.Type(types.Name{Package: pkg, Name: name}),

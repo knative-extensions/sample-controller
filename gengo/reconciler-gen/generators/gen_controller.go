@@ -84,23 +84,17 @@ func (g *genController) Imports(c *generator.Context) (imports []string) {
 }
 
 func (g *genController) Init(c *generator.Context, w io.Writer) error {
-	kind := g.kind
-	klog.Infof("Generating controller for kind %v", kind)
+	klog.Infof("Generating controller for kind %v", g.kind)
 
 	sw := generator.NewSnippetWriter(w, c, "{{", "}}")
 
 	klog.V(5).Infof("processing kind %v", g.kind)
 
-	pkg := kind[:strings.LastIndex(kind, ".")]
-	name := kind[strings.LastIndex(kind, ".")+1:]
-
-	// TODO: inject this.
-	clientset := "knative.dev/sample-controller/pkg/client/clientset/versioned"
+	pkg := g.kind[:strings.LastIndex(g.kind, ".")]
+	name := g.kind[strings.LastIndex(g.kind, ".")+1:]
 
 	m := map[string]interface{}{
 		"type": c.Universe.Type(types.Name{Package: pkg, Name: name}),
-		// need this?
-		"clientsetInterface": c.Universe.Type(types.Name{Name: "Interface", Package: clientset}),
 		// Methods.
 		"controllerImpl": c.Universe.Type(types.Name{Package: "knative.dev/pkg/controller", Name: "Impl"}),
 		"loggingFromContext": c.Universe.Function(types.Name{

@@ -84,13 +84,12 @@ func (g *genReconciler) Imports(c *generator.Context) (imports []string) {
 }
 
 func (g *genReconciler) Init(c *generator.Context, w io.Writer) error {
-	kind := g.kind
-	klog.Infof("Generating genreconciler function for kind %v", kind)
+	klog.Infof("Generating reconciler for kind %v", g.kind)
 
 	sw := generator.NewSnippetWriter(w, c, "{{", "}}")
 
-	pkg := kind[:strings.LastIndex(kind, ".")]
-	name := kind[strings.LastIndex(kind, ".")+1:]
+	pkg := g.kind[:strings.LastIndex(g.kind, ".")]
+	name := g.kind[strings.LastIndex(g.kind, ".")+1:]
 
 	// TODO: inject this.
 	clientset := "knative.dev/sample-controller/pkg/client/clientset/versioned"

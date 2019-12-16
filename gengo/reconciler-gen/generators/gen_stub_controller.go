@@ -84,8 +84,7 @@ func (g *genStubController) Imports(c *generator.Context) (imports []string) {
 }
 
 func (g *genStubController) Init(c *generator.Context, w io.Writer) error {
-	kind := g.kind
-	klog.Infof("Generating genreconciler function for kind %v", kind)
+	klog.Infof("Generating sub controller for kind %v", g.kind)
 
 	sw := generator.NewSnippetWriter(w, c, "{{", "}}")
 
