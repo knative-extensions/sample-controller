@@ -29,6 +29,8 @@ import (
 	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
 	"knative.dev/pkg/tracker"
+	client "knative.dev/sample-controller/pkg/client/injection/client"
+	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
 )
 
 const (
@@ -41,10 +43,10 @@ func NewImpl(ctx context.Context, r *Reconciler) *controller.Impl {
 
 	impl := controller.NewImpl(r, logger, "addressableservices")
 
-	injectionInformer := unnameable_DeclarationOf(ctx)
+	injectionInformer := addressableservice.Get(ctx)
 
 	r.Core = Core{
-		Client:  unnameable_DeclarationOf(ctx),
+		Client:  client.Get(ctx),
 		Lister:  injectionInformer.Lister(),
 		Tracker: tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx)),
 		Recorder: record.NewBroadcaster().NewRecorder(
