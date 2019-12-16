@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	codegennamer "k8s.io/code-generator/pkg/namer"
 	"k8s.io/gengo/examples/set-gen/sets"
 	"k8s.io/gengo/generator"
 	"k8s.io/gengo/namer"
@@ -86,11 +87,20 @@ func (r *lowercaseNamer) Name(t *types.Type) string {
 	return strings.ToLower(t.Name.Name)
 }
 
-type clientsetNamer struct{}
+type versionedClientsetNamer struct {
+	public *ExceptionNamer
+}
 
-func (r *clientsetNamer) Name(t *types.Type) string {
-	// TODO
-	return strings.ToLower(t.Name.Name)
+func (r *versionedClientsetNamer) Name(t *types.Type) string {
+	// Turns type into a GroupVersion type string based on package.
+	parts := strings.Split(t.Name.Package, "/")
+	group := parts[len(parts)-2]
+	version := parts[len(parts)-1]
+
+	g := r.public.Name(&types.Type{Name: types.Name{Name: group, Package: t.Name.Package}})
+	v := r.public.Name(&types.Type{Name: types.Name{Name: version, Package: t.Name.Package}})
+
+	return g + v
 }
 
 // NameSystems returns the name system used by the generators in this package.
@@ -153,14 +163,14 @@ func NameSystems() namer.NameSystems {
 
 	return namer.NameSystems{
 		"singularKind":       namer.NewPublicNamer(0),
-		"raw":                namer.NewRawNamer("", nil),
 		"publicPlural":       publicPluralNamer,
 		"privatePlural":      privatePluralNamer,
 		"public":             publicNamer,
 		"private":            privateNamer,
 		"allLowercase":       &lowercaseNamer{},
 		"allLowercasePlural": lowercasePluralNamer,
-		"clientset":          &clientsetNamer{},
+		"versionedClientset": &versionedClientsetNamer{public: publicNamer},
+		"apiGroup":           codegennamer.NewTagOverrideNamer("publicPlural", publicPluralNamer),
 	}
 }
 
@@ -259,19 +269,4 @@ func Packages(context *generator.Context, arguments *args.GeneratorArgs) generat
 
 	}
 	return packages
-}
-
-func UnsafeGuessKindToResource(kind string) string {
-	if len(kind) == 0 {
-		return ""
-	}
-
-	switch string(kind[len(kind)-1]) {
-	case "s":
-		return kind + "es"
-	case "y":
-		return strings.TrimSuffix(kind, "y") + "ies"
-	}
-
-	return kind + "s"
 }

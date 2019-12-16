@@ -16,12 +16,12 @@ limitations under the License.
 
 // TODO: Remove `genreconciler:stubs` and edit this file.
 
-package anotherthing
+package stubbedaddressableservice
 
 import (
 	"context"
 
-	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	v1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
 
 // Reconciler implements controller.Reconciler for AddressableService resources.

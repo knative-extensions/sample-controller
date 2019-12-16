@@ -54,7 +54,9 @@ func NewGenStubController(sanitizedName, targetPackage string, kind, client, inf
 }
 
 func (g *genStubController) Namers(c *generator.Context) namer.NameSystems {
-	return NameSystems()
+	namers := NameSystems()
+	namers["raw"] = namer.NewRawNamer(g.targetPackage, g.imports)
+	return namers
 }
 
 func (g *genStubController) Filter(c *generator.Context, t *types.Type) bool {

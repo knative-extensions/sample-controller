@@ -14,10 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// TODO: Remove `genreconciler:stubs` and edit this file.
+
 package addressableservice
 
 import (
 	"context"
+
 	corev1 "k8s.io/api/core/v1"
 	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/configmap"
@@ -25,7 +28,7 @@ import (
 	"knative.dev/pkg/logging"
 )
 
-// NewController returns a new HPA reconcile controller.
+// NewController creates a Reconciler and returns the result of NewImpl.
 func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
@@ -50,5 +53,6 @@ func NewController(
 			corev1.SchemeGroupVersion.WithKind("Service"),
 		),
 	))
+
 	return impl
 }

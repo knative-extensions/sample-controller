@@ -54,7 +54,9 @@ func NewGenController(sanitizedName, targetPackage string, kind, client, informe
 }
 
 func (g *genController) Namers(c *generator.Context) namer.NameSystems {
-	return NameSystems()
+	namers := NameSystems()
+	namers["raw"] = namer.NewRawNamer(g.targetPackage, g.imports)
+	return namers
 }
 
 func (g *genController) Filter(c *generator.Context, t *types.Type) bool {
@@ -83,7 +85,7 @@ func (g *genController) Imports(c *generator.Context) (imports []string) {
 
 func (g *genController) Init(c *generator.Context, w io.Writer) error {
 	kind := g.kind
-	klog.Infof("Generating genreconciler function for kind %v", kind)
+	klog.Infof("Generating controller for kind %v", kind)
 
 	sw := generator.NewSnippetWriter(w, c, "{{", "}}")
 
@@ -92,8 +94,13 @@ func (g *genController) Init(c *generator.Context, w io.Writer) error {
 	pkg := kind[:strings.LastIndex(kind, ".")]
 	name := kind[strings.LastIndex(kind, ".")+1:]
 
+	// TODO: inject this.
+	clientset := "knative.dev/sample-controller/pkg/client/clientset/versioned"
+
 	m := map[string]interface{}{
 		"type": c.Universe.Type(types.Name{Package: pkg, Name: name}),
+		// need this?
+		"clientsetInterface": c.Universe.Type(types.Name{Name: "Interface", Package: clientset}),
 		// Methods.
 		"controllerImpl": c.Universe.Type(types.Name{Package: "knative.dev/pkg/controller", Name: "Impl"}),
 		"loggingFromContext": c.Universe.Function(types.Name{

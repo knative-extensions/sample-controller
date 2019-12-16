@@ -18,6 +18,7 @@ package addressableservice
 
 import (
 	"context"
+
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/apis"
@@ -25,7 +26,7 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/tracker"
-	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	v1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
 
 // Reconciler implements controller.Reconciler for AddressableService resources.
@@ -36,23 +37,23 @@ type Reconciler struct {
 	ServiceLister corev1listers.ServiceLister
 }
 
-// Check that our Reconciler implements reconciler.Interface
+// Check that our Reconciler implements Interface
 var _ Interface = (*Reconciler)(nil)
 
-// ReconcileKind implements addressableservice Interface.ReconcileKind.
-func (r *Reconciler) ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) error {
-	if asvc.GetDeletionTimestamp() != nil {
+// ReconcileKind implements Interface.ReconcileKind.
+func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) error {
+	if o.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
 		// When a controller needs finalizer handling, it would go here.
 		return nil
 	}
-	asvc.Status.InitializeConditions()
+	o.Status.InitializeConditions()
 
-	if err := r.reconcileForService(ctx, asvc); err != nil {
+	if err := r.reconcileForService(ctx, o); err != nil {
 		return err
 	}
 
-	asvc.Status.ObservedGeneration = asvc.Generation
+	o.Status.ObservedGeneration = o.Generation
 	return nil
 }
 

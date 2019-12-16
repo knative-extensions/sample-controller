@@ -67,9 +67,6 @@ func main() {
 	klog.InitFlags(nil)
 	arguments := args.Default()
 
-	// Override defaults.
-	arguments.OutputFileBaseName = "reconciler_generated"
-
 	// Run it.
 	if err := arguments.Execute(
 		generators.NameSystems(),
@@ -80,9 +77,3 @@ func main() {
 	}
 	klog.V(2).Info("Completed successfully.")
 }
-
-/**
-
-go run gengo/reconciler-gen/main.go --input-dirs knative.dev/sample-controller/pkg/reconciler/addressableservice -O zz_generated.auto.rec --bounding-dirs knative.dev/sample-controller/pkg/reconciler --go-header-file ./hack/boilerplate/boilerplate.go.txt
-
-*/

@@ -54,7 +54,9 @@ func NewGenReconciler(sanitizedName, targetPackage string, kind, client, informe
 }
 
 func (g *genReconciler) Namers(c *generator.Context) namer.NameSystems {
-	return NameSystems()
+	namers := NameSystems()
+	namers["raw"] = namer.NewRawNamer(g.targetPackage, g.imports)
+	return namers
 }
 
 func (g *genReconciler) Filter(c *generator.Context, t *types.Type) bool {
@@ -91,23 +93,20 @@ func (g *genReconciler) Init(c *generator.Context, w io.Writer) error {
 	name := kind[strings.LastIndex(kind, ".")+1:]
 
 	// TODO: inject this.
-	clientSet := "knative.dev/sample-controller/pkg/client/clientset/versioned"
-	listerName := "AddressableServiceLister"
+	clientset := "knative.dev/sample-controller/pkg/client/clientset/versioned"
+	listerName := name + "Lister"
 	listerPkg := "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
 
 	m := map[string]interface{}{
-		// types
 		"type": c.Universe.Type(types.Name{Package: pkg, Name: name}),
-		// TODO
-		"clientsetInterface":   c.Universe.Type(types.Name{Name: "Interface", Package: clientSet}),
-		"resourceLister":       c.Universe.Type(types.Name{Package: listerPkg, Name: listerName}),
+		// Deps
+		"clientsetInterface":   c.Universe.Type(types.Name{Name: "Interface", Package: clientset}),
+		"resourceLister":       c.Universe.Type(types.Name{Name: listerName, Package: listerPkg}),
 		"trackerInterface":     c.Universe.Type(types.Name{Name: "Interface", Package: "knative.dev/pkg/tracker"}),
 		"controllerReconciler": c.Universe.Type(types.Name{Name: "Reconciler", Package: "knative.dev/pkg/controller"}),
 		// K8s types
 		"recordEventRecorder": c.Universe.Type(types.Name{Name: "EventRecorder", Package: "k8s.io/client-go/tools/record"}),
 		// methods
-		"resource":       c.Universe.Type(types.Name{Package: pkg, Name: name}),
-		"controllerImpl": c.Universe.Type(types.Name{Package: "knative.dev/pkg/controller", Name: "Impl"}),
 		"loggingFromContext": c.Universe.Function(types.Name{
 			Package: "knative.dev/pkg/logging",
 			Name:    "FromContext",
@@ -116,22 +115,16 @@ func (g *genReconciler) Init(c *generator.Context, w io.Writer) error {
 			Package: "k8s.io/client-go/tools/cache",
 			Name:    "SplitMetaNamespaceKey",
 		}),
-
-		"clientGet": c.Universe.Function(types.Name{
-			Package: g.client,
-			Name:    "Get",
-		}),
-		"informerGet": c.Universe.Function(types.Name{
-			Package: g.informer,
-			Name:    "Get",
-		}),
-		"corev1EventSource": c.Universe.Function(types.Name{
-			Package: "k8s.io/api/core/v1",
-			Name:    "EventSource",
+		"retryRetryOnConflict": c.Universe.Function(types.Name{
+			Package: "k8s.io/client-go/util/retry",
+			Name:    "RetryOnConflict",
 		}),
 	}
 
-	sw.Do(reconcilerFactory, m)
+	sw.Do(reconcilerInterfaceFactory, m)
+	sw.Do(reconcilerImplFactory, m)
+	sw.Do(reconcilerStatusFactory, m)
+	sw.Do(reconcilerFinalizerFactory, m)
 
 	return sw.Error()
 }
@@ -140,19 +133,19 @@ func (g *genReconciler) GenerateType(c *generator.Context, t *types.Type, w io.W
 	return nil
 }
 
-var reconcilerFactory = `
+var reconcilerInterfaceFactory = `
 // Interface defines the strongly typed interfaces to be implemented by a
-// controller reconciling the Kind.
+// controller reconciling {{.type|raw}}.
 type Interface interface {
-	// ReconcileKind implements custom logic to reconcile the Kind. Any changes
+	// ReconcileKind implements custom logic to reconcile {{.type|raw}}. Any changes
 	// to the objects .Status or .Finalizers will be propagated to the stored
 	// object. It is recommended that implementors do not call any update calls
 	// for the Kind inside of ReconcileKind, it is the responsibility of the core
 	// controller to propagate those properties.
-	ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) error
+	ReconcileKind(ctx context.Context, o *{{.type|raw}}) error
 }
 
-// Reconciler implements controller.Reconciler for {{.kind|resource}} resources.
+// Reconciler implements controller.Reconciler for {{.type|raw}} resources.
 type Core struct {
 	// Client is used to write back status updates.
 	Client {{.clientsetInterface|raw}}
@@ -160,7 +153,7 @@ type Core struct {
 	// Listers index properties about resources
 	Lister {{.resourceLister|raw}}
 
-	// The tracker builds an index of what resources are watching other
+	// Tracker builds an index of what resources are watching other
 	// resources so that we can immediately react to changes to changes in
 	// tracked resources.
 	Tracker {{.trackerInterface|raw}}
@@ -180,6 +173,9 @@ type Core struct {
 // Check that our Core implements controller.Reconciler
 var _ controller.Reconciler = (*Core)(nil)
 
+`
+
+var reconcilerImplFactory = `
 // Reconcile implements controller.Reconciler
 func (r *Core) Reconcile(ctx context.Context, key string) error {
 	logger := {{.loggingFromContext|raw}}(ctx)
@@ -191,12 +187,14 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 		return nil
 	}
 
-	// If our controller has configuration state, we'd "freeze" it and
+    // TODO: this is needed for serving.
+ 	// If our controller has configuration state, we'd "freeze" it and
 	// attach the frozen configuration to the context.
 	//    ctx = r.configStore.ToContext(ctx)
 
+
 	// Get the resource with this namespace/name.
-	original, err := r.Lister.AddressableServices(namespace).Get(name)
+	original, err := r.Lister.{{.type|apiGroup}}(namespace).Get(name)
 	if apierrs.IsNotFound(err) {
 		// The resource may no longer exist, in which case we stop processing.
 		logger.Errorf("resource %q no longer exists", key)
@@ -243,13 +241,15 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 	}
 	return reconcileErr
 }
+`
 
-func (r *Core) updateStatus(existing *v1alpha1.AddressableService, desired *v1alpha1.AddressableService) error {
+var reconcilerStatusFactory = `
+func (r *Core) updateStatus(existing *{{.type|raw}}, desired *{{.type|raw}}) error {
 	existing = existing.DeepCopy()
 	return RetryUpdateConflicts(func(attempts int) (err error) {
 		// The first iteration tries to use the informer's state, subsequent attempts fetch the latest state via API.
 		if attempts > 0 {
-			existing, err = r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Get(desired.Name, metav1.GetOptions{})
+			existing, err = r.Client.{{.type|versionedClientset}}().{{.type|apiGroup}}(desired.Namespace).Get(desired.Name, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -261,7 +261,7 @@ func (r *Core) updateStatus(existing *v1alpha1.AddressableService, desired *v1al
 		}
 
 		existing.Status = desired.Status
-		_, err = r.Client.SamplesV1alpha1().AddressableServices(existing.Namespace).UpdateStatus(existing)
+		_, err = r.Client.{{.type|versionedClientset}}().{{.type|apiGroup}}(existing.Namespace).UpdateStatus(existing)
 		return err
 	})
 }
@@ -272,16 +272,18 @@ func (r *Core) updateStatus(existing *v1alpha1.AddressableService, desired *v1al
 // This can be used to retry status updates without constantly reenqueuing keys.
 func RetryUpdateConflicts(updater func(int) error) error {
 	attempts := 0
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	return {{.retryRetryOnConflict|raw}}(retry.DefaultRetry, func() error {
 		err := updater(attempts)
 		attempts++
 		return err
 	})
 }
+`
 
+var reconcilerFinalizerFactory = `
 // Update the Finalizers of the resource.
-func (r *Core) updateFinalizers(ctx context.Context, desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, bool, error) {
-	actual, err := r.Lister.AddressableServices(desired.Namespace).Get(desired.Name)
+func (r *Core) updateFinalizers(ctx context.Context, desired *{{.type|raw}}) (*{{.type|raw}}, bool, error) {
+	actual, err := r.Lister.{{.type|apiGroup}}(desired.Namespace).Get(desired.Name)
 	if err != nil {
 		return nil, false, err
 	}
@@ -324,17 +326,17 @@ func (r *Core) updateFinalizers(ctx context.Context, desired *v1alpha1.Addressab
 		return desired, false, err
 	}
 
-	update, err := r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Patch(existing.Name, types.MergePatchType, patch)
+	update, err := r.Client.{{.type|versionedClientset}}().{{.type|apiGroup}}(desired.Namespace).Patch(existing.Name, types.MergePatchType, patch)
 	return update, true, err
 }
 
-func (r *Core) setFinalizer(a *v1alpha1.AddressableService) {
+func (r *Core) setFinalizer(a *{{.type|raw}}) {
 	finalizers := sets.NewString(a.Finalizers...)
 	finalizers.Insert(r.FinalizerName)
 	a.Finalizers = finalizers.List()
 }
 
-func (r *Core) unsetFinalizer(a *v1alpha1.AddressableService) {
+func (r *Core) unsetFinalizer(a *{{.type|raw}}) {
 	finalizers := sets.NewString(a.Finalizers...)
 	finalizers.Delete(r.FinalizerName)
 	a.Finalizers = finalizers.List()

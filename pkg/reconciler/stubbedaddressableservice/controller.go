@@ -16,7 +16,7 @@ limitations under the License.
 
 // TODO: Remove `genreconciler:stubs` and edit this file.
 
-package anotherthing
+package stubbedaddressableservice
 
 import (
 	"context"

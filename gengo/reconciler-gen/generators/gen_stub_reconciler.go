@@ -54,7 +54,9 @@ func NewGenStubReconciler(sanitizedName, targetPackage string, kind, client, inf
 }
 
 func (g *genStubReconciler) Namers(c *generator.Context) namer.NameSystems {
-	return NameSystems()
+	namers := NameSystems()
+	namers["raw"] = namer.NewRawNamer(g.targetPackage, g.imports)
+	return namers
 }
 
 func (g *genStubReconciler) Filter(c *generator.Context, t *types.Type) bool {
