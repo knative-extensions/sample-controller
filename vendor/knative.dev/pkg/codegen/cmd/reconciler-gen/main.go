@@ -14,15 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package logstream
+package main
 
-import "knative.dev/pkg/test"
+import (
+	"knative.dev/pkg/codegen/cmd/reconciler-gen/args"
+	"knative.dev/pkg/codegen/cmd/reconciler-gen/generators"
 
-type null struct{}
+	"k8s.io/klog"
+)
 
-var _ streamer = (*null)(nil)
+func main() {
+	klog.InitFlags(nil)
+	arguments := args.Default()
 
-// Start implements streamer
-func (*null) Start(t test.TLegacy) Canceler {
-	return func() {}
+	// Run it.
+	if err := arguments.Execute(
+		generators.NameSystems(),
+		generators.DefaultNameSystem(),
+		generators.Packages,
+	); err != nil {
+		klog.Fatalf("Error: %v", err)
+	}
+	klog.V(2).Info("Completed successfully.")
 }

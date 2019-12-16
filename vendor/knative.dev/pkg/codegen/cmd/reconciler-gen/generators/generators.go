@@ -26,12 +26,12 @@ import (
 	"k8s.io/gengo/generator"
 	"k8s.io/gengo/namer"
 	"k8s.io/gengo/types"
-	"knative.dev/sample-controller/gengo/reconciler-gen/args"
+	"knative.dev/pkg/codegen/cmd/reconciler-gen/args"
 
 	"k8s.io/klog"
 )
 
-// This is the comment tag that carries parameters for deep-copy generation.
+// This is the comment tag that carries parameters for reconciler generation.
 const (
 	tagEnabledName           = "genreconciler"
 	kindTagName              = tagEnabledName + ":kind"
@@ -123,50 +123,28 @@ func NameSystems() namer.NameSystems {
 	lowercasePluralNamer := namer.NewAllLowercasePluralNamer(pluralExceptions)
 
 	publicNamer := &ExceptionNamer{
-		Exceptions: map[string]string{
-			// these exceptions are used to deconflict the generated code
-			// you can put your fully qualified package like
-			// to generate a name that doesn't conflict with your group.
-			// "k8s.io/apis/events/v1beta1.Event": "EventResource"
-		},
+		Exceptions: map[string]string{},
 		KeyFunc: func(t *types.Type) string {
 			return t.Name.Package + "." + t.Name.Name
 		},
 		Delegate: namer.NewPublicNamer(0),
 	}
 	privateNamer := &ExceptionNamer{
-		Exceptions: map[string]string{
-			// these exceptions are used to deconflict the generated code
-			// you can put your fully qualified package like
-			// to generate a name that doesn't conflict with your group.
-			// "k8s.io/apis/events/v1beta1.Event": "eventResource"
-		},
+		Exceptions: map[string]string{},
 		KeyFunc: func(t *types.Type) string {
 			return t.Name.Package + "." + t.Name.Name
 		},
 		Delegate: namer.NewPrivateNamer(0),
 	}
 	publicPluralNamer := &ExceptionNamer{
-		Exceptions: map[string]string{
-			// these exceptions are used to deconflict the generated code
-			// you can put your fully qualified package like
-			// to generate a name that doesn't conflict with your group.
-			// "k8s.io/apis/events/v1beta1.Event": "EventResource"
-		},
+		Exceptions: map[string]string{},
 		KeyFunc: func(t *types.Type) string {
 			return t.Name.Package + "." + t.Name.Name
 		},
 		Delegate: namer.NewPublicPluralNamer(pluralExceptions),
 	}
 	privatePluralNamer := &ExceptionNamer{
-		Exceptions: map[string]string{
-			// you can put your fully qualified package like
-			// to generate a name that doesn't conflict with your group.
-			// "k8s.io/apis/events/v1beta1.Event": "eventResource"
-			// these exceptions are used to deconflict the generated code
-			"k8s.io/apis/events/v1beta1.Event":        "eventResources",
-			"k8s.io/kubernetes/pkg/apis/events.Event": "eventResources",
-		},
+		Exceptions: map[string]string{},
 		KeyFunc: func(t *types.Type) string {
 			return t.Name.Package + "." + t.Name.Name
 		},

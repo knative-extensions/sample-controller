@@ -38,5 +38,14 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   "samples:v1alpha1" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
+
+
+go install ${KNATIVE_CODEGEN_PKG}/codegen/cmd/reconciler-gen
+
+# Knative Reconcilers
+reconciler-gen -O zz_generated \
+  --input-dirs knative.dev/sample-controller/pkg/reconciler/... \
+  --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
+
 # Make sure our dependencies are up-to-date
 ${REPO_ROOT}/hack/update-deps.sh

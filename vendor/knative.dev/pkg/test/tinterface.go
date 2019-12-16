@@ -14,25 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// TODO: Remove `genreconciler:stubs` and edit this file.
+// Defines an interface of commonality between testing.T and logging.TLogger
+// Allows most library functions to be shared
+// Simplifies coexistance with TLogger
 
-package stubbedaddressableservice
+package test
 
-import (
-	"context"
+type T interface {
+	Name() string
+	Helper()
+	SkipNow()
+	Log(args ...interface{})
+	Error(args ...interface{})
+}
 
-	"knative.dev/pkg/configmap"
-	"knative.dev/pkg/controller"
-)
-
-// NewController creates a Reconciler and returns the result of NewImpl.
-func NewController(
-	ctx context.Context,
-	cmw configmap.Watcher,
-) *controller.Impl {
-
-	r := &Reconciler{}
-	impl := NewImpl(ctx, r)
-
-	return impl
+type TLegacy interface {
+	T
+	Logf(fmt string, args ...interface{}) // It gets passed to things in logstream
+	Fatal(args ...interface{})
 }
