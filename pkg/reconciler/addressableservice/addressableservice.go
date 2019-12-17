@@ -26,18 +26,19 @@ import (
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/tracker"
 	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	"knative.dev/sample-controller/pkg/client/reconcilers/samples/v1alpha1/addressableservice"
 )
 
 // Reconciler implements controller.Reconciler for AddressableService resources.
 type Reconciler struct {
-	Core
+	addressableservice.Core
 
 	// Listers index properties about resources
 	ServiceLister corev1listers.ServiceLister
 }
 
 // Check that our Reconciler implements reconciler.Interface
-var _ Interface = (*Reconciler)(nil)
+var _ addressableservice.Interface = (*Reconciler)(nil)
 
 // ReconcileKind implements addressableservice Interface.ReconcileKind.
 func (r *Reconciler) ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) error {
