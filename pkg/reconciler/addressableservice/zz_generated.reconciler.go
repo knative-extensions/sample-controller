@@ -130,7 +130,7 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 		// This is important because the copy we loaded from the informer's
 		// cache may be stale and we don't want to overwrite a prior update
 		// to status with this stale state.
-	} else if _, err = r.updateStatus(resource); err != nil {
+	} else if err = r.updateStatus(original, resource); err != nil {
 		logger.Warnw("Failed to update resource status", zap.Error(err))
 		r.Recorder.Eventf(resource, corev1.EventTypeWarning, "UpdateFailed",
 			"Failed to update status for %q: %v", resource.Name, err)
@@ -146,19 +146,38 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 
 // Update the Status of the resource.  Caller is responsible for checking
 // for semantic differences before calling.
-func (r *Core) updateStatus(desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, error) {
-	actual, err := r.Lister.AddressableServices(desired.Namespace).Get(desired.Name)
-	if err != nil {
-		return nil, err
-	}
-	// If there's nothing to update, just return.
-	if reflect.DeepEqual(actual.Status, desired.Status) {
-		return actual, nil
-	}
-	// Don't modify the informers copy
-	existing := actual.DeepCopy()
-	existing.Status = desired.Status
-	return r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).UpdateStatus(existing)
+func (r *Core) updateStatus(existing *v1alpha1.AddressableService, desired *v1alpha1.AddressableService) error {
+	existing = existing.DeepCopy()
+	return RetryUpdateConflicts(func(attempts int) (err error) {
+		// The first iteration tries to use the injectionInformer's state, subsequent attempts fetch the latest state via API.
+		if attempts > 0 {
+			existing, err = r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Get(desired.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+		}
+
+		// If there's nothing to update, just return.
+		if reflect.DeepEqual(existing.Status, desired.Status) {
+			return nil
+		}
+
+		existing.Status = desired.Status
+		_, err = r.Client.SamplesV1alpha1().AddressableServices(existing.Namespace).UpdateStatus(existing)
+		return err
+	})
+}
+
+// TODO: move this to knative.dev/pkg/reconciler
+// RetryUpdateConflicts retries the inner function if it returns conflict errors.
+// This can be used to retry status updates without constantly reenqueuing keys.
+func RetryUpdateConflicts(updater func(int) error) error {
+	attempts := 0
+	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		err := updater(attempts)
+		attempts++
+		return err
+	})
 }
 
 // Update the Finalizers of the resource.
