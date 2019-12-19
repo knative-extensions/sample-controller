@@ -35,6 +35,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
 	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	clientset "knative.dev/sample-controller/pkg/client/clientset/versioned"
@@ -137,8 +138,18 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 		return err
 	}
 
-	// Report the reconciler error, if any.
-	if reconcileErr != nil {
+	var event *reconciler.ReconcilerEvent
+	if errors.As(reconcileErr, &event) {
+		// Record the event.
+		r.Recorder.Eventf(resource, event.EventType, event.Reason, event.Format, event.Args...)
+		// The reconciler throws up an error if it wants to log a normal event.
+		// If this happens, nil the error out to not be returned to the queue
+		// manager.
+		if event.EventType == corev1.EventTypeNormal {
+			reconcileErr = nil
+		}
+	} else if reconcileErr != nil {
+		// Report the unknown reconciler error, if any.
 		r.Recorder.Event(resource, corev1.EventTypeWarning, "InternalError", reconcileErr.Error())
 	}
 	return reconcileErr
