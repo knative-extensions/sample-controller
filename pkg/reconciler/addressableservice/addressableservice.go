@@ -28,7 +28,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/apis"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
@@ -126,7 +126,7 @@ func (r *Reconciler) reconcile(ctx context.Context, asvc *v1alpha1.AddressableSe
 func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.AddressableService) error {
 	logger := logging.FromContext(ctx)
 
-	if err := r.Tracker.Track(corev1.ObjectReference{
+	if err := r.Tracker.TrackReference(tracker.Reference{
 		APIVersion: "v1",
 		Kind:       "Service",
 		Name:       asvc.Spec.ServiceName,
@@ -147,7 +147,7 @@ func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.Addres
 	}
 
 	asvc.Status.MarkServiceAvailable()
-	asvc.Status.Address = &duckv1beta1.Addressable{
+	asvc.Status.Address = &duckv1.Addressable{
 		URL: &apis.URL{
 			Scheme: "http",
 			Host:   network.GetServiceHostname(asvc.Spec.ServiceName, asvc.Namespace),
