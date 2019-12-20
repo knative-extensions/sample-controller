@@ -20,22 +20,11 @@ import (
 	"context"
 	"knative.dev/sample-controller/pkg/client/reconcilers/samples/v1alpha1/addressableservice"
 
-	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
-	asclient "knative.dev/sample-controller/pkg/client/injection/client"
-	asinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
-
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/tools/record"
+	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/tracker"
-)
-
-const (
-	controllerAgentName = "addressableservice-controller"
-	finalizerName       = "addressableservice"
 )
 
 // NewController returns a new HPA reconcile controller.
@@ -45,36 +34,22 @@ func NewController(
 ) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
-	asInformer := asinformer.Get(ctx)
 	svcInformer := svcinformer.Get(ctx)
 
 	r := &Reconciler{
 		ServiceLister: svcInformer.Lister(),
 	}
 
-	impl := controller.NewImpl(r, logger, "AddressableServices")
+	impl := addressableservice.NewImpl(ctx, r)
 
-	c := &addressableservice.Core{
-		Client:  asclient.Get(ctx),
-		Lister:  asInformer.Lister(),
-		Tracker: tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx)),
-		Recorder: record.NewBroadcaster().NewRecorder(
-			scheme.Scheme, corev1.EventSource{Component: controllerAgentName}),
-		FinalizerName: finalizerName,
-		Reconciler:    r,
-	}
+	logger.Info("Setting up additional dependency event handlers")
 
-	logger.Info("Setting up event handlers")
-
-	asInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
-
-	c.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	svcInformer.Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		controller.EnsureTypeMeta(
-			c.Tracker.OnChanged,
+			r.Core.Tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("Service"),
 		),
 	))

@@ -31,7 +31,7 @@ import (
 
 // Reconciler implements controller.Reconciler for AddressableService resources.
 type Reconciler struct {
-	addressableservice.Core
+	*addressableservice.Core
 
 	// Listers index properties about resources
 	ServiceLister corev1listers.ServiceLister
@@ -39,6 +39,10 @@ type Reconciler struct {
 
 // Check that our Reconciler implements reconciler.Interface
 var _ addressableservice.Interface = (*Reconciler)(nil)
+
+func (r *Reconciler) SetCore(core *addressableservice.Core) {
+	r.Core = core
+}
 
 // ReconcileKind implements addressableservice Interface.ReconcileKind.
 func (r *Reconciler) ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) error {
