@@ -129,6 +129,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:e2b86e41f3d669fc36b50d31d32d22c8ac656c75aa5ea89717ce7177e134ff2a"
+  name = "github.com/golang/glog"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
+
+[[projects]]
+  branch = "master"
   digest = "1:b7cb6054d3dff43b38ad2e92492f220f57ae6087ee797dca298139776749ace8"
   name = "github.com/golang/groupcache"
   packages = ["lru"]
@@ -297,6 +305,28 @@
   pruneopts = "NUT"
   revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
   version = "1.0.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1f32f8af4c60ad7d517faf6aafbcc059128493470599fe81f962585d1cae4a70"
+  name = "github.com/n3wscott/rigging"
+  packages = [
+    ".",
+    "pkg/images",
+    "pkg/installer",
+    "pkg/lifecycle",
+    "pkg/manifest",
+  ]
+  pruneopts = "NUT"
+  revision = "b78b02e3bca9fbce18162fafe3ea4e407cd9091a"
+
+[[projects]]
+  digest = "1:c01e66557785d9d75328704d11c44c26582980cd78209475cb141b3eedd11e9f"
+  name = "github.com/openzipkin/zipkin-go"
+  packages = ["model"]
+  pruneopts = "NUT"
+  revision = "c29478e51bfb2e9c93e0e9f5e015e5993a490399"
+  version = "v0.2.2"
 
 [[projects]]
   digest = "1:09fd8d3e830bac0a0e2d1f7009fe33a0c435ee14ae818be9cc9ceb5f77da18ae"
@@ -1015,6 +1045,14 @@
     "ptr",
     "signals",
     "system",
+    "test",
+    "test/helpers",
+    "test/ingress",
+    "test/logging",
+    "test/logstream",
+    "test/monitoring",
+    "test/spoof",
+    "test/zipkin",
     "tracker",
     "version",
     "webhook",
@@ -1051,6 +1089,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/n3wscott/rigging",
     "go.uber.org/zap",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/api/equality",
@@ -1091,6 +1130,7 @@
     "knative.dev/pkg/network",
     "knative.dev/pkg/signals",
     "knative.dev/pkg/system",
+    "knative.dev/pkg/test/logstream",
     "knative.dev/pkg/tracker",
     "knative.dev/pkg/webhook",
     "knative.dev/pkg/webhook/certificates",
