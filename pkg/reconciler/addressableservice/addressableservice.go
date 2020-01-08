@@ -18,6 +18,7 @@ package addressableservice
 
 import (
 	"context"
+	"knative.dev/pkg/reconciler"
 	"reflect"
 
 	"go.uber.org/zap"
@@ -37,6 +38,25 @@ import (
 	clientset "knative.dev/sample-controller/pkg/client/clientset/versioned"
 	listers "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
 )
+
+// Interface defines the strongly typed interfaces to be implemented by a
+// controller reconciling v1alpha1.AddressableService.
+type Interface interface {
+	// ReconcileKind implements custom logic to reconcile v1alpha1.AddressableService. Any changes
+	// to the objects .Status or .Finalizers will be propagated to the stored
+	// object. It is recommended that implementors do not call any update calls
+	// for the Kind inside of ReconcileKind, it is the responsibility of the core
+	// controller to propagate those properties.
+	ReconcileKind(context.Context, *v1alpha1.AddressableService) reconciler.Event
+}
+
+var _ Interface = (*Reconciler)(nil)
+
+// NewWarnInternal makes a new reconciler event with event type Warning, and
+// reason InternalError.
+func NewWarnInternal(msgf string, args ...interface{}) reconciler.Event {
+	return reconciler.NewEvent(corev1.EventTypeWarning, "InternalError", msgf, args...)
+}
 
 // Reconciler implements controller.Reconciler for AddressableService resources.
 type Reconciler struct {
@@ -89,7 +109,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 
 	// Reconcile this copy of the resource and then write back any status
 	// updates regardless of whether the reconciliation errored out.
-	reconcileErr := r.reconcile(ctx, resource)
+	reconcileErr := r.ReconcileKind(ctx, resource)
 	if equality.Semantic.DeepEqual(original.Status, resource.Status) {
 		// If we didn't change anything then don't call updateStatus.
 		// This is important because the copy we loaded from the informer's
@@ -102,12 +122,19 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 		return err
 	}
 	if reconcileErr != nil {
-		r.Recorder.Event(resource, corev1.EventTypeWarning, "InternalError", reconcileErr.Error())
+		logger.Error("ReconcileKind returned an error: %v", reconcileErr)
+		var event *reconciler.ReconcilerEvent
+		if reconciler.EventAs(reconcileErr, &event) {
+			r.Recorder.Eventf(resource, event.EventType, event.Reason, event.Format, event.Args...)
+		} else {
+			r.Recorder.Event(resource, corev1.EventTypeWarning, "InternalError", reconcileErr.Error())
+		}
 	}
 	return reconcileErr
 }
 
-func (r *Reconciler) reconcile(ctx context.Context, asvc *v1alpha1.AddressableService) error {
+// ReconcileKind implements Interface
+func (r *Reconciler) ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) reconciler.Event {
 	if asvc.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
 		// When a controller needs finalizer handling, it would go here.
@@ -132,8 +159,7 @@ func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.Addres
 		Name:       asvc.Spec.ServiceName,
 		Namespace:  asvc.Namespace,
 	}, asvc); err != nil {
-		logger.Errorf("Error tracking service %s: %v", asvc.Spec.ServiceName, err)
-		return err
+		return NewWarnInternal("Error tracking service %s: %v", asvc.Spec.ServiceName, err)
 	}
 
 	_, err := r.ServiceLister.Services(asvc.Namespace).Get(asvc.Spec.ServiceName)
@@ -142,8 +168,7 @@ func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.Addres
 		asvc.Status.MarkServiceUnavailable(asvc.Spec.ServiceName)
 		return nil
 	} else if err != nil {
-		logger.Errorf("Error reconciling service %s: %v", asvc.Spec.ServiceName, err)
-		return err
+		return NewWarnInternal("Error reconciling service %s: %v", asvc.Spec.ServiceName, err)
 	}
 
 	asvc.Status.MarkServiceAvailable()
