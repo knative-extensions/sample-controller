@@ -40,7 +40,7 @@ import (
 )
 
 // Interface defines the strongly typed interfaces to be implemented by a
-// controller reconciling v1alpha1.ContainerSource.
+// controller reconciling v1alpha1.AddressableService.
 type Interface interface {
 	// ReconcileKind implements custom logic to reconcile v1alpha1.AddressableService. Any changes
 	// to the objects .Status or .Finalizers will be propagated to the stored
@@ -133,6 +133,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	return reconcileErr
 }
 
+// ReconcileKind implements Interface
 func (r *Reconciler) ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) reconciler.Event {
 	if asvc.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
