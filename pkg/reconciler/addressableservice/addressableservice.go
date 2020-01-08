@@ -80,7 +80,7 @@ type Reconciler struct {
 // Check that our Reconciler implements controller.Reconciler
 var _ controller.Reconciler = (*Reconciler)(nil)
 
-// Reconcile implements controller.Reconciler
+// Reconcile implements Interface.ReconcileKind
 func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	logger := logging.FromContext(ctx)
 
