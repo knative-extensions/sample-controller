@@ -18,8 +18,9 @@ package addressableservice
 
 import (
 	"context"
-	"knative.dev/pkg/reconciler"
 	"reflect"
+
+	"knative.dev/pkg/reconciler"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
