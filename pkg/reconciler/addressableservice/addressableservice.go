@@ -18,6 +18,7 @@ package addressableservice
 
 import (
 	"context"
+
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
