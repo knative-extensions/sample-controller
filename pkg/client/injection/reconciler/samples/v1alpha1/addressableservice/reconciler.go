@@ -24,7 +24,9 @@ import (
 	"reflect"
 
 	"go.uber.org/zap"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
+	errors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/sets"
 	cache "k8s.io/client-go/tools/cache"
@@ -48,6 +50,10 @@ type Interface interface {
 	// for the Kind inside of ReconcileKind, it is the responsibility of the core
 	// controller to propagate those properties.
 	ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event
+
+	// SetCore allows the inner core reconciler to be set from the controller
+	// constructor based on only providing the Interface.
+	SetCore(core *Core)
 }
 
 // Reconciler implements controller.Reconciler for v1alpha1.AddressableService resources.
@@ -96,7 +102,7 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 
 	// Get the resource with this namespace/name.
 	original, err := r.Lister.AddressableServices(namespace).Get(name)
-	if apierrs.IsNotFound(err) {
+	if errors.IsNotFound(err) {
 		// The resource may no longer exist, in which case we stop processing.
 		logger.Errorf("resource %q no longer exists", key)
 		return nil
@@ -115,12 +121,12 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 		// If we didn't change finalizers then don't call updateFinalizers.
 	} else if _, updated, fErr := r.updateFinalizers(ctx, resource); fErr != nil {
 		logger.Warnw("Failed to update finalizers", zap.Error(fErr))
-		r.Recorder.Eventf(resource, corev1.EventTypeWarning, "UpdateFailed",
+		r.Recorder.Eventf(resource, v1.EventTypeWarning, "UpdateFailed",
 			"Failed to update finalizers for %q: %v", resource.Name, fErr)
 		return fErr
 	} else if updated {
 		// There was a difference and updateFinalizers said it updated and did not return an error.
-		r.Recorder.Eventf(resource, corev1.EventTypeNormal, "Updated", "Updated %q finalizers", resource.GetName())
+		r.Recorder.Eventf(resource, v1.EventTypeNormal, "Updated", "Updated %q finalizers", resource.GetName())
 	}
 
 	// Synchronize the status.
@@ -131,7 +137,7 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 		// to status with this stale state.
 	} else if err = r.updateStatus(original, resource); err != nil {
 		logger.Warnw("Failed to update resource status", zap.Error(err))
-		r.Recorder.Eventf(resource, corev1.EventTypeWarning, "UpdateFailed",
+		r.Recorder.Eventf(resource, v1.EventTypeWarning, "UpdateFailed",
 			"Failed to update status for %q: %v", resource.Name, err)
 		return err
 	}
@@ -139,11 +145,11 @@ func (r *Core) Reconcile(ctx context.Context, key string) error {
 	// Report the reconciler event, if any.
 	if reconcileEvent != nil {
 		logger.Error("ReconcileKind returned an event: %v", reconcileEvent)
-		var event *reconciler.Event
+		var event *reconciler.ReconcilerEvent
 		if reconciler.EventAs(reconcileEvent, &event) {
 			r.Recorder.Eventf(resource, event.EventType, event.Reason, event.Format, event.Args...)
 		} else {
-			r.Recorder.Event(resource, corev1.EventTypeWarning, "InternalError", reconcileEvent.Error())
+			r.Recorder.Event(resource, v1.EventTypeWarning, "InternalError", reconcileEvent.Error())
 		}
 	}
 	return reconcileEvent

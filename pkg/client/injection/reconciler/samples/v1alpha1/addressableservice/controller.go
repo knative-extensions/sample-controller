@@ -36,7 +36,7 @@ const (
 	finalizerName       = "addressableservice"
 )
 
-func NewImpl(ctx context.Context, r *Reconciler) *controller.Impl {
+func NewImpl(ctx context.Context, r Interface) *controller.Impl {
 	logger := logging.FromContext(ctx)
 	impl := controller.NewImpl(r, logger, "addressableservices")
 	injectionInformer := addressableservice.Get(ctx)

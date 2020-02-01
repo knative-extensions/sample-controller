@@ -39,7 +39,7 @@ required = [
 [[override]]
   name = "knative.dev/pkg"
   # TODO: PoC for generator import. DO NOT SUBMIT
-  revision = "c0c1c54952b4bba21a5873ae1c373ca3e46601e5"
+  revision = "40247f018f84dab8148e99f06bda6c1f1035664f"
   source = "github.com/n3wscott/pkg"
 
 [[override]]
