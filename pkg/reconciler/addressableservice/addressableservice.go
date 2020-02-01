@@ -25,23 +25,25 @@ import (
 	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
+	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
 	v1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	"knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
 
 // Reconciler implements controller.Reconciler for AddressableService resources.
 type Reconciler struct {
-	Core
+	addressableservice.Core
 
 	// Listers index properties about resources
 	ServiceLister corev1listers.ServiceLister
 }
 
 // Check that our Reconciler implements Interface
-var _ Interface = (*Reconciler)(nil)
+var _ addressableservice.Interface = (*Reconciler)(nil)
 
 // ReconcileKind implements Interface.ReconcileKind.
-func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) error {
+func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event {
 	if o.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
 		// When a controller needs finalizer handling, it would go here.

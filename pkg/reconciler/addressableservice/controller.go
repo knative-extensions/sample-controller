@@ -24,6 +24,7 @@ import (
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
 
 // NewController creates a Reconciler and returns the result of NewImpl.
@@ -38,7 +39,7 @@ func NewController(
 	r := &Reconciler{
 		ServiceLister: svcInformer.Lister(),
 	}
-	impl := NewImpl(ctx, r)
+	impl := addressableservice.NewImpl(ctx, r)
 
 	logger.Info("Setting up event handlers")
 
@@ -47,7 +48,7 @@ func NewController(
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		controller.EnsureTypeMeta(
-			r.Tracker.OnChanged,
+			r.Core.Tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("Service"),
 		),
 	))
