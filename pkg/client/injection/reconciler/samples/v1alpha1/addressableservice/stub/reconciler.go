@@ -36,7 +36,12 @@ type Reconciler struct {
 }
 
 // Check that our Reconciler implements Interface
-var _ Interface = (*Reconciler)(nil)
+var _ addressableservice.Interface = (*Reconciler)(nil)
+
+// SetCore implements Interface.SetCore.
+func (r *Reconciler) SetCore(core *addressableservice.Core) {
+	r.Core = *core
+}
 
 // ReconcileKind implements Interface.ReconcileKind.
 func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event {

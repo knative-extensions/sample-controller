@@ -38,18 +38,19 @@ const (
 
 func NewImpl(ctx context.Context, r Interface) *controller.Impl {
 	logger := logging.FromContext(ctx)
-	impl := controller.NewImpl(r, logger, "addressableservices")
 	injectionInformer := addressableservice.Get(ctx)
 
-	r.Core = Core{
-		Client:  client.Get(ctx),
-		Lister:  injectionInformer.Lister(),
-		Tracker: tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx)),
+	c := &Core{
+		Client: client.Get(ctx),
+		Lister: injectionInformer.Lister(),
 		Recorder: record.NewBroadcaster().NewRecorder(
 			scheme.Scheme, v1.EventSource{Component: controllerAgentName}),
 		FinalizerName: finalizerName,
 		Reconciler:    r,
 	}
+	impl := controller.NewImpl(c, logger, "addressableservices")
+	c.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
+	r.SetCore(c)
 
 	logger.Info("Setting up core event handlers")
 	injectionInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
