@@ -52,8 +52,8 @@ type Interface interface {
 	ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event
 }
 
-// Reconciler implements controller.Reconciler for v1alpha1.AddressableService resources.
-type Reconciler struct {
+// reconcilerImpl implements controller.Reconciler for v1alpha1.AddressableService resources.
+type reconcilerImpl struct {
 	// Client is used to write back status updates.
 	Client versioned.Interface
 
@@ -73,10 +73,10 @@ type Reconciler struct {
 }
 
 // Check that our Reconciler implements controller.Reconciler
-var _ controller.Reconciler = (*Reconciler)(nil)
+var _ controller.Reconciler = (*reconcilerImpl)(nil)
 
 // Reconcile implements controller.Reconciler
-func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
+func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 	logger := logging.FromContext(ctx)
 
 	// Convert the namespace/name string into a distinct namespace and name
@@ -146,7 +146,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 	return reconcileEvent
 }
 
-func (r *Reconciler) updateStatus(existing *v1alpha1.AddressableService, desired *v1alpha1.AddressableService) error {
+func (r *reconcilerImpl) updateStatus(existing *v1alpha1.AddressableService, desired *v1alpha1.AddressableService) error {
 	existing = existing.DeepCopy()
 	return RetryUpdateConflicts(func(attempts int) (err error) {
 		// The first iteration tries to use the injectionInformer's state, subsequent attempts fetch the latest state via API.
@@ -181,7 +181,7 @@ func RetryUpdateConflicts(updater func(int) error) error {
 }
 
 // Update the Finalizers of the resource.
-func (r *Reconciler) updateFinalizers(ctx context.Context, desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, bool, error) {
+func (r *reconcilerImpl) updateFinalizers(ctx context.Context, desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, bool, error) {
 	actual, err := r.Lister.AddressableServices(desired.Namespace).Get(desired.Name)
 	if err != nil {
 		return nil, false, err
@@ -229,13 +229,13 @@ func (r *Reconciler) updateFinalizers(ctx context.Context, desired *v1alpha1.Add
 	return update, true, err
 }
 
-func (r *Reconciler) setFinalizer(a *v1alpha1.AddressableService) {
+func (r *reconcilerImpl) setFinalizer(a *v1alpha1.AddressableService) {
 	finalizers := sets.NewString(a.Finalizers...)
 	finalizers.Insert(r.FinalizerName)
 	a.Finalizers = finalizers.List()
 }
 
-func (r *Reconciler) unsetFinalizer(a *v1alpha1.AddressableService) {
+func (r *reconcilerImpl) unsetFinalizer(a *v1alpha1.AddressableService) {
 	finalizers := sets.NewString(a.Finalizers...)
 	finalizers.Delete(r.FinalizerName)
 	a.Finalizers = finalizers.List()

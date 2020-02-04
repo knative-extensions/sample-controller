@@ -40,7 +40,7 @@ func NewImpl(ctx context.Context, r Interface) *controller.Impl {
 
 	addressableserviceInformer := addressableservice.Get(ctx)
 
-	c := &Reconciler{
+	c := &reconcilerImpl{
 		Client: client.Get(ctx),
 		Lister: addressableserviceInformer.Lister(),
 		Recorder: record.NewBroadcaster().NewRecorder(
