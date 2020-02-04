@@ -731,6 +731,17 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
+  digest = "1:d4cd0122df2a9cc11eb1c1865ede951c1db38db3e7505e9f0536a234440a6a78"
+  name = "k8s.io/apiextensions-apiserver"
+  packages = [
+    "pkg/apis/apiextensions",
+    "pkg/apis/apiextensions/v1beta1",
+  ]
+  pruneopts = "NUT"
+  revision = "111e9ba415dac090eaeb5a7aed2b90cf94afc0d0"
+  version = "v0.17.2"
+
+[[projects]]
   digest = "1:814703684a5e0baf4a4dc15fe892bfb266c57d66db5d6d89996cdec36efb2fc1"
   name = "k8s.io/apimachinery"
   packages = [
@@ -1014,11 +1025,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2d3f59daa4b479ff4e100a2e1d8fea6780040fdadc177869531fe4cc29407f55"
+  digest = "1:99dbf7ef753ca02399778c93a4ed4b689b28668317134ecd1fabeb07be70f354"
   name = "k8s.io/utils"
   packages = [
     "buffer",
     "integer",
+    "pointer",
     "trace",
   ]
   pruneopts = "NUT"
@@ -1026,7 +1038,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:107ee62154c011274e913c95b410fffde1c9a7ebb4e972a1428f4927a4f8afe6"
+  digest = "1:26325ee882afecdb033204b8f2d8e69f0d939f5bcc1a1b151233a7d78d74f7dc"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1069,7 +1081,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "d5698e90e262503c568a6abc645a0f34dcec385f"
+  revision = "7ddd3b6a42f6c3db48561e5d9525c66b546bab01"
 
 [[projects]]
   branch = "master"
@@ -1080,7 +1092,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "25ea2a3bc5b89b01ebd564ee53bb737b2c4105e0"
+  revision = "7086222c769000dd2122c44de8f43bbb335ad81a"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
