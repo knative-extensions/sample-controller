@@ -1016,7 +1016,7 @@
   revision = "5008bf6f8cd62f4b52816cfa99163fedb053d0be"
 
 [[projects]]
-  digest = "1:abaadaafad08e8e367cd72939a86c0233c83879496d12d2a867d7575611d84a2"
+  digest = "1:2c8a6f2742aecf890855da7cecbf65e21ef8ad7c6efe5f05c562863a7041b916"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1060,7 +1060,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "6591593eeda3ca971159c139b21620291ea47c77"
+  revision = "4d50d5134f05db0bc23f418bf29063dae6cf685d"
   source = "github.com/n3wscott/pkg"
 
 [[projects]]
@@ -1097,7 +1097,6 @@
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/runtime",
-    "k8s.io/apimachinery/pkg/util/sets",
     "k8s.io/apimachinery/pkg/watch",
     "k8s.io/client-go/discovery",
     "k8s.io/client-go/discovery/fake",

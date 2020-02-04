@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Kubernetes Authors.
+Copyright 2020 The Knative Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -124,7 +124,8 @@ func (g *reconcilerReconcilerGenerator) GenerateType(c *generator.Context, t *ty
 	sw.Do(reconcilerNewReconciler, m)
 	sw.Do(reconcilerImplFactory, m)
 	sw.Do(reconcilerStatusFactory, m)
-	sw.Do(reconcilerFinalizerFactory, m)
+	// TODO(n3wscott): Follow-up to add support for managing finalizers.
+	// sw.Do(reconcilerFinalizerFactory, m)
 
 	return sw.Error()
 }
@@ -190,7 +191,7 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 		return nil
 	}
 
-    // TODO: this is needed for serving.
+    // TODO(n3wscott): this is needed for serving.
  	// If our controller has configuration state, we'd "freeze" it and
 	// attach the frozen configuration to the context.
 	//    ctx = r.configStore.ToContext(ctx)
@@ -211,18 +212,19 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 	// updates regardless of whether the reconciliation errored out.
 	reconcileEvent := r.reconciler.ReconcileKind(ctx, resource)
 
+    // TODO(n3wscott): Follow-up to add support for managing finalizers.
 	// Synchronize the finalizers.
-	if equality.Semantic.DeepEqual(original.Finalizers, resource.Finalizers) {
-		// If we didn't change finalizers then don't call updateFinalizers.
-	} else if _, updated, fErr := r.updateFinalizers(ctx, resource); fErr != nil {
-		logger.Warnw("Failed to update finalizers", zap.Error(fErr))
-		r.Recorder.Eventf(resource, {{.corev1EventTypeWarning|raw}}, "UpdateFailed",
-			"Failed to update finalizers for %q: %v", resource.Name, fErr)
-		return fErr
-	} else if updated {
-		// There was a difference and updateFinalizers said it updated and did not return an error.
-		r.Recorder.Eventf(resource, {{.corev1EventTypeNormal|raw}}, "Updated", "Updated %q finalizers", resource.GetName())
-	}
+	//if equality.Semantic.DeepEqual(original.Finalizers, resource.Finalizers) {
+	//	// If we didn't change finalizers then don't call updateFinalizers.
+	//} else if _, updated, fErr := r.updateFinalizers(ctx, resource); fErr != nil {
+	//	logger.Warnw("Failed to update finalizers", zap.Error(fErr))
+	//	r.Recorder.Eventf(resource, {{.corev1EventTypeWarning|raw}}, "UpdateFailed",
+	//		"Failed to update finalizers for %q: %v", resource.Name, fErr)
+	//	return fErr
+	//} else if updated {
+	//	// There was a difference and updateFinalizers said it updated and did not return an error.
+	//	r.Recorder.Eventf(resource, {{.corev1EventTypeNormal|raw}}, "Updated", "Updated %q finalizers", resource.GetName())
+	//}
 
 	// Synchronize the status.
 	if equality.Semantic.DeepEqual(original.Status, resource.Status) {
