@@ -66,7 +66,14 @@ func (g *reconcilerReconcilerGenerator) GenerateType(c *generator.Context, t *ty
 	m := map[string]interface{}{
 		"type": t,
 
-		"controllerImpl": c.Universe.Type(types.Name{Package: "knative.dev/pkg/controller", Name: "Impl"}),
+		"controllerImpl": c.Universe.Type(types.Name{
+			Package: "knative.dev/pkg/controller",
+			Name:    "Impl",
+		}),
+		"controllerReconciler": c.Universe.Type(types.Name{
+			Package: "knative.dev/pkg/controller",
+			Name:    "Reconciler",
+		}),
 		"corev1EventSource": c.Universe.Function(types.Name{
 			Package: "k8s.io/api/core/v1",
 			Name:    "EventSource",
@@ -84,7 +91,6 @@ func (g *reconcilerReconcilerGenerator) GenerateType(c *generator.Context, t *ty
 		// Deps
 		"clientsetInterface": c.Universe.Type(types.Name{Name: "Interface", Package: g.clientsetPkg}),
 		"resourceLister":     c.Universe.Type(types.Name{Name: g.listerName, Package: g.listerPkg}),
-		"trackerInterface":   c.Universe.Type(types.Name{Name: "Interface", Package: "knative.dev/pkg/tracker"}),
 		// K8s types
 		"recordEventRecorder": c.Universe.Type(types.Name{Name: "EventRecorder", Package: "k8s.io/client-go/tools/record"}),
 		// methods
@@ -108,9 +114,14 @@ func (g *reconcilerReconcilerGenerator) GenerateType(c *generator.Context, t *ty
 			Package: "k8s.io/apimachinery/pkg/apis/meta/v1",
 			Name:    "GetOptions",
 		}),
+		"zapSugaredLogger": c.Universe.Type(types.Name{
+			Package: "go.uber.org/zap",
+			Name:    "SugaredLogger",
+		}),
 	}
 
 	sw.Do(reconcilerInterfaceFactory, m)
+	sw.Do(reconcilerNewReconciler, m)
 	sw.Do(reconcilerImplFactory, m)
 	sw.Do(reconcilerStatusFactory, m)
 	sw.Do(reconcilerFinalizerFactory, m)
@@ -130,18 +141,13 @@ type Interface interface {
 	ReconcileKind(ctx context.Context, o *{{.type|raw}}) {{.reconcilerEvent|raw}}
 }
 
-// Reconciler implements controller.Reconciler for {{.type|raw}} resources.
-type Reconciler struct {
+// reconcilerImpl implements controller.Reconciler for {{.type|raw}} resources.
+type reconcilerImpl struct {
 	// Client is used to write back status updates.
 	Client {{.clientsetInterface|raw}}
 
 	// Listers index properties about resources
 	Lister {{.resourceLister|raw}}
-
-	// Tracker builds an index of what resources are watching other
-	// resources so that we can immediately react to changes to changes in
-	// tracked resources.
-	Tracker {{.trackerInterface|raw}}
 
 	// Recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
@@ -156,13 +162,25 @@ type Reconciler struct {
 }
 
 // Check that our Reconciler implements controller.Reconciler
-var _ controller.Reconciler = (*Reconciler)(nil)
+var _ controller.Reconciler = (*reconcilerImpl)(nil)
 
+`
+
+var reconcilerNewReconciler = `
+func NewReconciler(ctx context.Context, logger *{{.zapSugaredLogger|raw}}, client {{.clientsetInterface|raw}}, lister {{.resourceLister|raw}}, recorder {{.recordEventRecorder|raw}}, r Interface) {{.controllerReconciler|raw}} {
+	return &reconcilerImpl{
+		Client: client,
+		Lister: lister,
+		Recorder: recorder,
+		FinalizerName: defaultFinalizerName,
+		reconciler:    r,
+	}
+}
 `
 
 var reconcilerImplFactory = `
 // Reconcile implements controller.Reconciler
-func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
+func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 	logger := {{.loggingFromContext|raw}}(ctx)
 
 	// Convert the namespace/name string into a distinct namespace and name
@@ -221,7 +239,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 
 	// Report the reconciler event, if any.
 	if reconcileEvent != nil {
-		logger.Error("ReconcileKind returned an event: %v", reconcileEvent)
+		logger.Errorw("ReconcileKind returned an event", zap.Error(reconcileEvent))
 		var event *{{.reconcilerReconcilerEvent|raw}}
 		if reconciler.EventAs(reconcileEvent, &event) {
 			r.Recorder.Eventf(resource, event.EventType, event.Reason, event.Format, event.Args...)
@@ -234,7 +252,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, key string) error {
 `
 
 var reconcilerStatusFactory = `
-func (r *Reconciler) updateStatus(existing *{{.type|raw}}, desired *{{.type|raw}}) error {
+func (r *reconcilerImpl) updateStatus(existing *{{.type|raw}}, desired *{{.type|raw}}) error {
 	existing = existing.DeepCopy()
 	return RetryUpdateConflicts(func(attempts int) (err error) {
 		// The first iteration tries to use the injectionInformer's state, subsequent attempts fetch the latest state via API.
@@ -272,7 +290,7 @@ func RetryUpdateConflicts(updater func(int) error) error {
 
 var reconcilerFinalizerFactory = `
 // Update the Finalizers of the resource.
-func (r *Reconciler) updateFinalizers(ctx context.Context, desired *{{.type|raw}}) (*{{.type|raw}}, bool, error) {
+func (r *reconcilerImpl) updateFinalizers(ctx context.Context, desired *{{.type|raw}}) (*{{.type|raw}}, bool, error) {
 	actual, err := r.Lister.{{.type|apiGroup}}(desired.Namespace).Get(desired.Name)
 	if err != nil {
 		return nil, false, err
@@ -320,13 +338,13 @@ func (r *Reconciler) updateFinalizers(ctx context.Context, desired *{{.type|raw}
 	return update, true, err
 }
 
-func (r *Reconciler) setFinalizer(a *{{.type|raw}}) {
+func (r *reconcilerImpl) setFinalizer(a *{{.type|raw}}) {
 	finalizers := sets.NewString(a.Finalizers...)
 	finalizers.Insert(r.FinalizerName)
 	a.Finalizers = finalizers.List()
 }
 
-func (r *Reconciler) unsetFinalizer(a *{{.type|raw}}) {
+func (r *reconcilerImpl) unsetFinalizer(a *{{.type|raw}}) {
 	finalizers := sets.NewString(a.Finalizers...)
 	finalizers.Delete(r.FinalizerName)
 	a.Finalizers = finalizers.List()

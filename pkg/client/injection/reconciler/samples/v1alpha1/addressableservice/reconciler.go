@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"reflect"
 
-	"go.uber.org/zap"
+	zap "go.uber.org/zap"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	errors "k8s.io/apimachinery/pkg/api/errors"
@@ -33,7 +33,7 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 	record "k8s.io/client-go/tools/record"
 	retry "k8s.io/client-go/util/retry"
-	"knative.dev/pkg/controller"
+	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
 	reconciler "knative.dev/pkg/reconciler"
 	v1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
@@ -74,6 +74,16 @@ type reconcilerImpl struct {
 
 // Check that our Reconciler implements controller.Reconciler
 var _ controller.Reconciler = (*reconcilerImpl)(nil)
+
+func NewReconciler(ctx context.Context, logger *zap.SugaredLogger, client versioned.Interface, lister samplesv1alpha1.AddressableServiceLister, recorder record.EventRecorder, r Interface) controller.Reconciler {
+	return &reconcilerImpl{
+		Client:        client,
+		Lister:        lister,
+		Recorder:      recorder,
+		FinalizerName: defaultFinalizerName,
+		reconciler:    r,
+	}
+}
 
 // Reconcile implements controller.Reconciler
 func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
@@ -135,7 +145,7 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 
 	// Report the reconciler event, if any.
 	if reconcileEvent != nil {
-		logger.Error("ReconcileKind returned an event: %v", reconcileEvent)
+		logger.Errorw("ReconcileKind returned an event", zap.Error(reconcileEvent))
 		var event *reconciler.ReconcilerEvent
 		if reconciler.EventAs(reconcileEvent, &event) {
 			r.Recorder.Eventf(resource, event.EventType, event.Reason, event.Format, event.Args...)
