@@ -18,9 +18,8 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"knative.dev/pkg/apis"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/kmeta"
 )
 
@@ -63,11 +62,11 @@ const (
 
 // AddressableServiceStatus communicates the observed state of the AddressableService (from the controller).
 type AddressableServiceStatus struct {
-	duckv1beta1.Status `json:",inline"`
+	duckv1.Status `json:",inline"`
 
 	// Address holds the information needed to connect this Addressable up to receive events.
 	// +optional
-	Address *duckv1beta1.Addressable `json:"address,omitempty"`
+	Address *duckv1.Addressable `json:"address,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

@@ -18,12 +18,12 @@ package addressableservice
 
 import (
 	"context"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/apis"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
@@ -93,7 +93,7 @@ func (r *Reconciler) reconcileForService(ctx context.Context, asvc *v1alpha1.Add
 	}
 
 	asvc.Status.MarkServiceAvailable()
-	asvc.Status.Address = &duckv1beta1.Addressable{
+	asvc.Status.Address = &duckv1.Addressable{
 		URL: &apis.URL{
 			Scheme: "http",
 			Host:   network.GetServiceHostname(asvc.Spec.ServiceName, asvc.Namespace),
