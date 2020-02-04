@@ -26,34 +26,29 @@ import (
 	"k8s.io/client-go/tools/record"
 	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
-	"knative.dev/pkg/tracker"
 	client "knative.dev/sample-controller/pkg/client/injection/client"
 	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
 )
 
 const (
-	controllerAgentName = "addressableservice-controller"
-	finalizerName       = "addressableservice"
+	defaultControllerAgentName = "addressableservice-controller"
+	defaultFinalizerName       = "addressableservice"
 )
 
 func NewImpl(ctx context.Context, r Interface) *controller.Impl {
 	logger := logging.FromContext(ctx)
-	injectionInformer := addressableservice.Get(ctx)
 
-	c := &Core{
+	addressableserviceInformer := addressableservice.Get(ctx)
+
+	c := &Reconciler{
 		Client: client.Get(ctx),
-		Lister: injectionInformer.Lister(),
+		Lister: addressableserviceInformer.Lister(),
 		Recorder: record.NewBroadcaster().NewRecorder(
-			scheme.Scheme, v1.EventSource{Component: controllerAgentName}),
-		FinalizerName: finalizerName,
-		Reconciler:    r,
+			scheme.Scheme, v1.EventSource{Component: defaultControllerAgentName}),
+		FinalizerName: defaultFinalizerName,
+		reconciler:    r,
 	}
 	impl := controller.NewImpl(c, logger, "addressableservices")
-	c.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
-	r.SetCore(c)
-
-	logger.Info("Setting up core event handlers")
-	injectionInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	return impl
 }

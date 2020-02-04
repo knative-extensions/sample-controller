@@ -18,13 +18,15 @@ package addressableservice
 
 import (
 	"context"
+	"knative.dev/pkg/tracker"
 
 	corev1 "k8s.io/api/core/v1"
 	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	"knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
+	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
+	v1alpha1addressableservice "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
 
 // NewController creates a Reconciler and returns the result of NewImpl.
@@ -34,21 +36,25 @@ func NewController(
 ) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
+	addressableserviceInformer := addressableservice.Get(ctx)
 	svcInformer := svcinformer.Get(ctx)
 
 	r := &Reconciler{
 		ServiceLister: svcInformer.Lister(),
 	}
-	impl := addressableservice.NewImpl(ctx, r)
+	impl := v1alpha1addressableservice.NewImpl(ctx, r)
+	r.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 
-	logger.Info("Setting up event handlers")
+	logger.Info("Setting up event handlers.")
+
+	addressableserviceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	svcInformer.Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		controller.EnsureTypeMeta(
-			r.Core.Tracker.OnChanged,
+			r.Tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("Service"),
 		),
 	))

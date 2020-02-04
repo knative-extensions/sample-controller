@@ -19,6 +19,7 @@ package addressableservice
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 	"knative.dev/pkg/apis"
@@ -31,9 +32,18 @@ import (
 	"knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
 
+// newReconciledNormal makes a new reconciler event with event type Normal, and
+// reason AddressableServiceReconciled.
+func newReconciledNormal(namespace, name string) reconciler.Event {
+	return reconciler.NewEvent(corev1.EventTypeNormal, "AddressableServiceReconciled", "AddressableService reconciled: \"%s/%s\"", namespace, name)
+}
+
 // Reconciler implements controller.Reconciler for AddressableService resources.
 type Reconciler struct {
-	addressableservice.Core
+	// Tracker builds an index of what resources are watching other
+	// resources so that we can immediately react to changes to changes in
+	// tracked resources.
+	Tracker tracker.Interface
 
 	// Listers index properties about resources
 	ServiceLister corev1listers.ServiceLister
@@ -41,11 +51,6 @@ type Reconciler struct {
 
 // Check that our Reconciler implements Interface
 var _ addressableservice.Interface = (*Reconciler)(nil)
-
-// SetCore implements Interface.SetCore.
-func (r *Reconciler) SetCore(core *addressableservice.Core) {
-	r.Core = *core
-}
 
 // ReconcileKind implements Interface.ReconcileKind.
 func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event {
@@ -61,7 +66,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableS
 	}
 
 	o.Status.ObservedGeneration = o.Generation
-	return nil
+	return newReconciledNormal(o.Namespace, o.Name)
 }
 
 func (r *Reconciler) reconcileForService(ctx context.Context, asvc *v1alpha1.AddressableService) error {

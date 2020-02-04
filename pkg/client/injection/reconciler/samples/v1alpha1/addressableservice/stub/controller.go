@@ -23,7 +23,9 @@ import (
 
 	"knative.dev/pkg/configmap"
 	controller "knative.dev/pkg/controller"
-	addressableservice "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
+	logging "knative.dev/pkg/logging"
+	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
+	v1alpha1addressableservice "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
 
 // TODO: PLEASE COPY AND MODIFY THIS FILE AS A STARTING POINT
@@ -33,11 +35,18 @@ func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
+	logger := logging.FromContext(ctx)
 
-	// TODO: setup additional requirements here.
+	addressableserviceInformer := addressableservice.Get(ctx)
+
+	// TODO: setup additional informers here.
 
 	r := &Reconciler{}
-	impl := addressableservice.NewImpl(ctx, r)
+	impl := v1alpha1addressableservice.NewImpl(ctx, r)
+
+	logger.Info("Setting up event handlers.")
+
+	addressableserviceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	// TODO: add additional informer event handlers here.
 
