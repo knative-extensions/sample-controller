@@ -38,9 +38,7 @@ required = [
 
 [[override]]
   name = "knative.dev/pkg"
-  # TODO: PoC for generator import. DO NOT SUBMIT
-  revision = "4d50d5134f05db0bc23f418bf29063dae6cf685d"
-  source = "github.com/n3wscott/pkg"
+  branch = "master"
 
 [[override]]
   name = "google.golang.org/genproto"
