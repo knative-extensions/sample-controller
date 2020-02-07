@@ -39,7 +39,8 @@ func newReconciledNormal(namespace, name string) reconciler.Event {
 	return reconciler.NewEvent(corev1.EventTypeNormal, "AddressableServiceReconciled", "AddressableService reconciled: \"%s/%s\"", namespace, name)
 }
 
-// Reconciler implements controller.Reconciler for AddressableService resources.
+// Reconciler implements addressableservicereconciler.Interface for
+// AddressableService resources.
 type Reconciler struct {
 	// Tracker builds an index of what resources are watching other
 	// resources so that we can immediately react to changes to changes in
