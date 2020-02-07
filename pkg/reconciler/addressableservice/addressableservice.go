@@ -18,18 +18,19 @@ package addressableservice
 
 import (
 	"context"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	corev1listers "k8s.io/client-go/listers/core/v1"
+
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
-	v1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
-	"knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
+	samplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	addressableservicereconciler "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
 
 // newReconciledNormal makes a new reconciler event with event type Normal, and
@@ -50,10 +51,10 @@ type Reconciler struct {
 }
 
 // Check that our Reconciler implements Interface
-var _ addressableservice.Interface = (*Reconciler)(nil)
+var _ addressableservicereconciler.Interface = (*Reconciler)(nil)
 
 // ReconcileKind implements Interface.ReconcileKind.
-func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event {
+func (r *Reconciler) ReconcileKind(ctx context.Context, o *samplesv1alpha1.AddressableService) reconciler.Event {
 	if o.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
 		// When a controller needs finalizer handling, it would go here.
@@ -69,7 +70,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableS
 	return newReconciledNormal(o.Namespace, o.Name)
 }
 
-func (r *Reconciler) reconcileForService(ctx context.Context, asvc *v1alpha1.AddressableService) error {
+func (r *Reconciler) reconcileForService(ctx context.Context, asvc *samplesv1alpha1.AddressableService) error {
 	logger := logging.FromContext(ctx)
 
 	if err := r.Tracker.TrackReference(tracker.Reference{

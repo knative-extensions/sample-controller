@@ -143,15 +143,18 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 
 	// Report the reconciler event, if any.
 	if reconcileEvent != nil {
-		logger.Errorw("ReconcileKind returned an event", zap.Error(reconcileEvent))
 		var event *reconciler.ReconcilerEvent
 		if reconciler.EventAs(reconcileEvent, &event) {
+			logger.Infow("ReconcileKind returned an event", zap.Any("event", reconcileEvent))
 			r.Recorder.Eventf(resource, event.EventType, event.Reason, event.Format, event.Args...)
+			return nil
 		} else {
+			logger.Errorw("ReconcileKind returned an error", zap.Error(reconcileEvent))
 			r.Recorder.Event(resource, v1.EventTypeWarning, "InternalError", reconcileEvent.Error())
+			return reconcileEvent
 		}
 	}
-	return reconcileEvent
+	return nil
 }
 
 func (r *reconcilerImpl) updateStatus(existing *v1alpha1.AddressableService, desired *v1alpha1.AddressableService) error {

@@ -21,12 +21,16 @@ package addressableservice
 import (
 	"context"
 
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/tools/record"
+	corev1 "k8s.io/api/core/v1"
+	watch "k8s.io/apimachinery/pkg/watch"
+	scheme "k8s.io/client-go/kubernetes/scheme"
+	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	record "k8s.io/client-go/tools/record"
+	client "knative.dev/pkg/client/injection/kube/client"
 	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
-	client "knative.dev/sample-controller/pkg/client/injection/client"
+	versionedscheme "knative.dev/sample-controller/pkg/client/clientset/versioned/scheme"
+	injectionclient "knative.dev/sample-controller/pkg/client/injection/client"
 	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
 )
 
@@ -40,15 +44,37 @@ func NewImpl(ctx context.Context, r Interface) *controller.Impl {
 
 	addressableserviceInformer := addressableservice.Get(ctx)
 
+	recorder := controller.GetEventRecorder(ctx)
+	if recorder == nil {
+		// Create event broadcaster
+		logger.Debug("Creating event broadcaster")
+		eventBroadcaster := record.NewBroadcaster()
+		watches := []watch.Interface{
+			eventBroadcaster.StartLogging(logger.Named("event-broadcaster").Infof),
+			eventBroadcaster.StartRecordingToSink(
+				&v1.EventSinkImpl{Interface: client.Get(ctx).CoreV1().Events("")}),
+		}
+		recorder = eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: defaultControllerAgentName})
+		go func() {
+			<-ctx.Done()
+			for _, w := range watches {
+				w.Stop()
+			}
+		}()
+	}
+
 	c := &reconcilerImpl{
-		Client: client.Get(ctx),
-		Lister: addressableserviceInformer.Lister(),
-		Recorder: record.NewBroadcaster().NewRecorder(
-			scheme.Scheme, v1.EventSource{Component: defaultControllerAgentName}),
+		Client:        injectionclient.Get(ctx),
+		Lister:        addressableserviceInformer.Lister(),
+		Recorder:      recorder,
 		FinalizerName: defaultFinalizerName,
 		reconciler:    r,
 	}
 	impl := controller.NewImpl(c, logger, "addressableservices")
 
 	return impl
+}
+
+func init() {
+	versionedscheme.AddToScheme(scheme.Scheme)
 }

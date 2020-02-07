@@ -21,12 +21,13 @@ import (
 	"knative.dev/pkg/tracker"
 
 	corev1 "k8s.io/api/core/v1"
-	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
-	v1alpha1addressableservice "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
+
+	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	addressableserviceinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
+	addressableservicereconciler "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
 
 // NewController creates a Reconciler and returns the result of NewImpl.
@@ -36,13 +37,13 @@ func NewController(
 ) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
-	addressableserviceInformer := addressableservice.Get(ctx)
+	addressableserviceInformer := addressableserviceinformer.Get(ctx)
 	svcInformer := svcinformer.Get(ctx)
 
 	r := &Reconciler{
 		ServiceLister: svcInformer.Lister(),
 	}
-	impl := v1alpha1addressableservice.NewImpl(ctx, r)
+	impl := addressableservicereconciler.NewImpl(ctx, r)
 	r.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 
 	logger.Info("Setting up event handlers.")
