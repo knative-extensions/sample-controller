@@ -18,6 +18,7 @@ package generators
 
 import (
 	"io"
+
 	"k8s.io/gengo/generator"
 	"k8s.io/gengo/namer"
 	"k8s.io/gengo/types"
@@ -33,6 +34,7 @@ type reconcilerControllerGenerator struct {
 	filtered      bool
 
 	clientPkg           string
+	schemePkg           string
 	informerPackagePath string
 }
 
@@ -85,6 +87,34 @@ func (g *reconcilerControllerGenerator) GenerateType(c *generator.Context, t *ty
 			Package: g.informerPackagePath,
 			Name:    "Get",
 		}),
+		"schemeScheme": c.Universe.Function(types.Name{
+			Package: "k8s.io/client-go/kubernetes/scheme",
+			Name:    "Scheme",
+		}),
+		"schemeAddToScheme": c.Universe.Function(types.Name{
+			Package: g.schemePkg,
+			Name:    "AddToScheme",
+		}),
+		"kubeclientGet": c.Universe.Function(types.Name{
+			Package: "knative.dev/pkg/client/injection/kube/client",
+			Name:    "Get",
+		}),
+		"typedcorev1EventSinkImpl": c.Universe.Function(types.Name{
+			Package: "k8s.io/client-go/kubernetes/typed/core/v1",
+			Name:    "EventSinkImpl",
+		}),
+		"recordNewBroadcaster": c.Universe.Function(types.Name{
+			Package: "k8s.io/client-go/tools/record",
+			Name:    "NewBroadcaster",
+		}),
+		"watchInterface": c.Universe.Type(types.Name{
+			Package: "k8s.io/apimachinery/pkg/watch",
+			Name:    "Interface",
+		}),
+		"controllerGetEventRecorder": c.Universe.Function(types.Name{
+			Package: "knative.dev/pkg/controller",
+			Name:    "GetEventRecorder",
+		}),
 	}
 
 	sw.Do(reconcilerControllerNewImpl, m)
@@ -103,11 +133,29 @@ func NewImpl(ctx context.Context, r Interface) *{{.controllerImpl|raw}} {
 
 	{{.type|lowercaseSingular}}Informer := {{.informerGet|raw}}(ctx)
 
+	recorder := {{.controllerGetEventRecorder|raw}}(ctx)
+	if recorder == nil {
+		// Create event broadcaster
+		logger.Debug("Creating event broadcaster")
+		eventBroadcaster := {{.recordNewBroadcaster|raw}}()
+		watches := []{{.watchInterface|raw}}{
+			eventBroadcaster.StartLogging(logger.Named("event-broadcaster").Infof),
+			eventBroadcaster.StartRecordingToSink(
+				&{{.typedcorev1EventSinkImpl|raw}}{Interface: {{.kubeclientGet|raw}}(ctx).CoreV1().Events("")}),
+		}
+		recorder = eventBroadcaster.NewRecorder({{.schemeScheme|raw}}, {{.corev1EventSource|raw}}{Component: defaultControllerAgentName})
+		go func() {
+			<-ctx.Done()
+			for _, w := range watches {
+				w.Stop()
+			}
+		}()
+	}
+
 	c := &reconcilerImpl{
 		Client:  {{.clientGet|raw}}(ctx),
 		Lister:  {{.type|lowercaseSingular}}Informer.Lister(),
-		Recorder: record.NewBroadcaster().NewRecorder(
-			scheme.Scheme, {{.corev1EventSource|raw}}{Component: defaultControllerAgentName}),
+		Recorder: recorder,
 		FinalizerName: defaultFinalizerName,
 		reconciler:    r,
 	}
@@ -116,4 +164,7 @@ func NewImpl(ctx context.Context, r Interface) *{{.controllerImpl|raw}} {
 	return impl
 }
 
+func init() {
+	{{.schemeAddToScheme|raw}}({{.schemeScheme|raw}})
+}
 `
