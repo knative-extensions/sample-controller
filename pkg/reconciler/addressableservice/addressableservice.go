@@ -42,9 +42,8 @@ func newReconciledNormal(namespace, name string) reconciler.Event {
 // Reconciler implements addressableservicereconciler.Interface for
 // AddressableService resources.
 type Reconciler struct {
-	// Tracker builds an index of what resources are watching other
-	// resources so that we can immediately react to changes to changes in
-	// tracked resources.
+	// Tracker builds an index of what resources are watching other resources
+	// so that we can immediately react to changes tracked resources.
 	Tracker tracker.Interface
 
 	// Listers index properties about resources
