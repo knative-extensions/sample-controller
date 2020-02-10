@@ -43,8 +43,7 @@ func NewController(
 	r := &Reconciler{
 		ServiceLister: svcInformer.Lister(),
 	}
-	impl := addressableservicereconciler.NewFinalizingImpl(ctx, r, "")
-	//impl := addressableservicereconciler.NewImpl(ctx, r)
+	impl := addressableservicereconciler.NewImpl(ctx, r)
 	r.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 
 	logger.Info("Setting up event handlers.")
