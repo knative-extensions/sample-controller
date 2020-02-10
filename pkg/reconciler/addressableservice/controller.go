@@ -18,56 +18,47 @@ package addressableservice
 
 import (
 	"context"
-
-	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
-	asclient "knative.dev/sample-controller/pkg/client/injection/client"
-	asinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
+	"knative.dev/pkg/tracker"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/tools/record"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
-	"knative.dev/pkg/tracker"
+
+	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
+	addressableserviceinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
+	addressableservicereconciler "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
 
-const (
-	controllerAgentName = "addressableservice-controller"
-)
-
-// NewController returns a new HPA reconcile controller.
+// NewController creates a Reconciler and returns the result of NewImpl.
 func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
-	asInformer := asinformer.Get(ctx)
+	addressableserviceInformer := addressableserviceinformer.Get(ctx)
 	svcInformer := svcinformer.Get(ctx)
 
-	c := &Reconciler{
-		Client:        asclient.Get(ctx),
-		Lister:        asInformer.Lister(),
+	r := &Reconciler{
 		ServiceLister: svcInformer.Lister(),
-		Recorder: record.NewBroadcaster().NewRecorder(
-			scheme.Scheme, corev1.EventSource{Component: controllerAgentName}),
 	}
-	impl := controller.NewImpl(c, logger, "AddressableServices")
+	impl := addressableservicereconciler.NewImpl(ctx, r)
+	r.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 
-	logger.Info("Setting up event handlers")
+	logger.Info("Setting up event handlers.")
 
-	asInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
+	addressableserviceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
-	c.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 	svcInformer.Informer().AddEventHandler(controller.HandleAll(
 		// Call the tracker's OnChanged method, but we've seen the objects
 		// coming through this path missing TypeMeta, so ensure it is properly
 		// populated.
 		controller.EnsureTypeMeta(
-			c.Tracker.OnChanged,
+			r.Tracker.OnChanged,
 			corev1.SchemeGroupVersion.WithKind("Service"),
 		),
 	))
+
 	return impl
 }

@@ -24,6 +24,7 @@ import (
 )
 
 // +genclient
+// +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AddressableService is a Knative abstraction that encapsulates the interface by which Knative

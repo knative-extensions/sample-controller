@@ -19,34 +19,58 @@ package addressableservice
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
+	corev1listers "k8s.io/client-go/listers/core/v1"
+
 	"knative.dev/pkg/apis"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/network"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/pkg/tracker"
-	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	samplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	addressableservicereconciler "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
 
-// ReconcileKind implements Interface
-func (r *Reconciler) ReconcileKind(ctx context.Context, asvc *v1alpha1.AddressableService) reconciler.Event {
-	if asvc.GetDeletionTimestamp() != nil {
+// newReconciledNormal makes a new reconciler event with event type Normal, and
+// reason AddressableServiceReconciled.
+func newReconciledNormal(namespace, name string) reconciler.Event {
+	return reconciler.NewEvent(corev1.EventTypeNormal, "AddressableServiceReconciled", "AddressableService reconciled: \"%s/%s\"", namespace, name)
+}
+
+// Reconciler implements addressableservicereconciler.Interface for
+// AddressableService resources.
+type Reconciler struct {
+	// Tracker builds an index of what resources are watching other resources
+	// so that we can immediately react to changes tracked resources.
+	Tracker tracker.Interface
+
+	// Listers index properties about resources
+	ServiceLister corev1listers.ServiceLister
+}
+
+// Check that our Reconciler implements Interface
+var _ addressableservicereconciler.Interface = (*Reconciler)(nil)
+
+// ReconcileKind implements Interface.ReconcileKind.
+func (r *Reconciler) ReconcileKind(ctx context.Context, o *samplesv1alpha1.AddressableService) reconciler.Event {
+	if o.GetDeletionTimestamp() != nil {
 		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
 		// When a controller needs finalizer handling, it would go here.
 		return nil
 	}
-	asvc.Status.InitializeConditions()
+	o.Status.InitializeConditions()
 
-	if err := r.reconcileService(ctx, asvc); err != nil {
+	if err := r.reconcileForService(ctx, o); err != nil {
 		return err
 	}
 
-	asvc.Status.ObservedGeneration = asvc.Generation
-	return nil
+	o.Status.ObservedGeneration = o.Generation
+	return newReconciledNormal(o.Namespace, o.Name)
 }
 
-func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.AddressableService) error {
+func (r *Reconciler) reconcileForService(ctx context.Context, asvc *samplesv1alpha1.AddressableService) error {
 	logger := logging.FromContext(ctx)
 
 	if err := r.Tracker.TrackReference(tracker.Reference{
@@ -55,7 +79,8 @@ func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.Addres
 		Name:       asvc.Spec.ServiceName,
 		Namespace:  asvc.Namespace,
 	}, asvc); err != nil {
-		return NewWarnInternal("Error tracking service %s: %v", asvc.Spec.ServiceName, err)
+		logger.Errorf("Error tracking service %s: %v", asvc.Spec.ServiceName, err)
+		return err
 	}
 
 	_, err := r.ServiceLister.Services(asvc.Namespace).Get(asvc.Spec.ServiceName)
@@ -64,7 +89,8 @@ func (r *Reconciler) reconcileService(ctx context.Context, asvc *v1alpha1.Addres
 		asvc.Status.MarkServiceUnavailable(asvc.Spec.ServiceName)
 		return nil
 	} else if err != nil {
-		return NewWarnInternal("Error reconciling service %s: %v", asvc.Spec.ServiceName, err)
+		logger.Errorf("Error reconciling service %s: %v", asvc.Spec.ServiceName, err)
+		return err
 	}
 
 	asvc.Status.MarkServiceAvailable()
