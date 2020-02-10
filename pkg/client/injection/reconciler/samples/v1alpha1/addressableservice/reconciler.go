@@ -75,12 +75,13 @@ type reconcilerImpl struct {
 // Check that our Reconciler implements controller.Reconciler
 var _ controller.Reconciler = (*reconcilerImpl)(nil)
 
-func NewReconciler(ctx context.Context, logger *zap.SugaredLogger, client versioned.Interface, lister samplesv1alpha1.AddressableServiceLister, recorder record.EventRecorder, r Interface) controller.Reconciler {
+func NewReconciler(ctx context.Context, logger *zap.SugaredLogger, client versioned.Interface, lister samplesv1alpha1.AddressableServiceLister, recorder record.EventRecorder, finalizerName *string, r Interface) controller.Reconciler {
 	return &reconcilerImpl{
-		Client:     client,
-		Lister:     lister,
-		Recorder:   recorder,
-		reconciler: r,
+		Client:        client,
+		Lister:        lister,
+		Recorder:      recorder,
+		finalizerName: finalizerName,
+		reconciler:    r,
 	}
 }
 
@@ -121,7 +122,8 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 	// updates regardless of whether the reconciliation errored out.
 	reconcileEvent := r.reconciler.ReconcileKind(ctx, resource)
 
-	// For finalizing reconcilers, if this resource being marked for deletation and reconciled cleanly, remove the finalizer.
+	// For finalizing reconcilers, if this resource being marked for deletion
+	// and reconciled cleanly (nil or normal event), remove the finalizer.
 	if r.isFinalizing() && !resource.GetDeletionTimestamp().IsZero() {
 		if reconcileEvent != nil {
 			var event *reconciler.ReconcilerEvent
@@ -135,7 +137,7 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 		}
 	}
 
-	// Synchronize the finalizers.
+	// Synchronize the finalizers filtered by r.finalizerName.
 	if equality.Semantic.DeepEqual(original.Finalizers, resource.Finalizers) {
 		// If we didn't change finalizers then don't call updateFinalizersFiltered.
 	} else if _, updated, fErr := r.updateFinalizersFiltered(ctx, resource); fErr != nil {
@@ -199,7 +201,7 @@ func (r *reconcilerImpl) updateStatus(existing *v1alpha1.AddressableService, des
 	})
 }
 
-// Update the Finalizers of the resource.
+// updateFinalizersFiltered will update the Finalizers of the resource.
 // TODO: this method could be generic and sync all finalizers. For now it only
 // updates r.finalizerName.
 func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, bool, error) {
