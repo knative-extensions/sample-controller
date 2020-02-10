@@ -17,5 +17,4 @@ kind: Namespace
 metadata:
   name: knative-samples
   labels:
-    istio-injection: enabled
     samples.knative.dev/release: devel

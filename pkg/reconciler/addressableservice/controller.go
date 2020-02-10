@@ -43,7 +43,7 @@ func NewController(
 	r := &Reconciler{
 		ServiceLister: svcInformer.Lister(),
 	}
-	impl := addressableservicereconciler.NewImpl(ctx, r)
+	impl := addressableservicereconciler.NewFinalizingImpl(ctx, r, "addressableservice.samples.knative.dev")
 	r.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
 
 	logger.Info("Setting up event handlers.")

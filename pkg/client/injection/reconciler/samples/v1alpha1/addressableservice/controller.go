@@ -20,6 +20,8 @@ package addressableservice
 
 import (
 	"context"
+	"k8s.io/utils/pointer"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -36,10 +38,27 @@ import (
 
 const (
 	defaultControllerAgentName = "addressableservice-controller"
-	defaultFinalizerName       = "addressableservice"
+	defaultFinalizerName       = "addressableservice" // TODO: make this have the api group.
 )
 
+func NewFinalizingImpl(ctx context.Context, r Interface, finalizer string) *controller.Impl {
+	logger := logging.FromContext(ctx)
+	rec := newRecordedReconcilerImpl(ctx, r)
+	finalizer = strings.TrimSpace(finalizer)
+	if finalizer == "" {
+		finalizer = defaultFinalizerName
+	}
+	rec.finalizerName = pointer.StringPtr(finalizer)
+	return controller.NewImpl(rec, logger, "addressableservices")
+}
+
 func NewImpl(ctx context.Context, r Interface) *controller.Impl {
+	logger := logging.FromContext(ctx)
+	rec := newRecordedReconcilerImpl(ctx, r)
+	return controller.NewImpl(rec, logger, "addressableservices")
+}
+
+func newRecordedReconcilerImpl(ctx context.Context, r Interface) *reconcilerImpl {
 	logger := logging.FromContext(ctx)
 
 	addressableserviceInformer := addressableservice.Get(ctx)
@@ -63,16 +82,12 @@ func NewImpl(ctx context.Context, r Interface) *controller.Impl {
 		}()
 	}
 
-	c := &reconcilerImpl{
-		Client:        injectionclient.Get(ctx),
-		Lister:        addressableserviceInformer.Lister(),
-		Recorder:      recorder,
-		FinalizerName: defaultFinalizerName,
-		reconciler:    r,
+	return &reconcilerImpl{
+		Client:     injectionclient.Get(ctx),
+		Lister:     addressableserviceInformer.Lister(),
+		Recorder:   recorder,
+		reconciler: r,
 	}
-	impl := controller.NewImpl(c, logger, "addressableservices")
-
-	return impl
 }
 
 func init() {

@@ -39,4 +39,4 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Make sure our dependencies are up-to-date
-${REPO_ROOT}/hack/update-deps.sh
+# ${REPO_ROOT}/hack/update-deps.sh
