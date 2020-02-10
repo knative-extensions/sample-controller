@@ -20,7 +20,6 @@ package addressableservice
 
 import (
 	"context"
-	"k8s.io/utils/pointer"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -28,6 +27,7 @@ import (
 	scheme "k8s.io/client-go/kubernetes/scheme"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	record "k8s.io/client-go/tools/record"
+	"k8s.io/utils/pointer"
 	client "knative.dev/pkg/client/injection/kube/client"
 	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"

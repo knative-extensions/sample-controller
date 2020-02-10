@@ -18,12 +18,12 @@ package addressableservice
 
 import (
 	"context"
-	"knative.dev/pkg/tracker"
 
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
 	"knative.dev/pkg/logging"
+	"knative.dev/pkg/tracker"
 
 	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	addressableserviceinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
