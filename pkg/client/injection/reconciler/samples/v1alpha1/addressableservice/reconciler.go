@@ -51,6 +51,11 @@ type Interface interface {
 	ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event
 }
 
+type Finalizer interface {
+	// FinalizeKind implements custom logic to finalize v1alpha1.AddressableService.
+	FinalizeKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event
+}
+
 // reconcilerImpl implements controller.Reconciler for v1alpha1.AddressableService resources.
 type reconcilerImpl struct {
 	// Client is used to write back status updates.
@@ -63,11 +68,6 @@ type reconcilerImpl struct {
 	// Kubernetes API.
 	Recorder record.EventRecorder
 
-	// finalizerName is the name of the finalizer to use when finalizing the
-	// resource. If not nil, finalizerName is used to mark resources with a
-	// finalizer.
-	finalizerName *string
-
 	// reconciler is the implementation of the business logic of the resource.
 	reconciler Interface
 }
@@ -75,13 +75,12 @@ type reconcilerImpl struct {
 // Check that our Reconciler implements controller.Reconciler
 var _ controller.Reconciler = (*reconcilerImpl)(nil)
 
-func NewReconciler(ctx context.Context, logger *zap.SugaredLogger, client versioned.Interface, lister samplesv1alpha1.AddressableServiceLister, recorder record.EventRecorder, finalizerName *string, r Interface) controller.Reconciler {
+func NewReconciler(ctx context.Context, logger *zap.SugaredLogger, client versioned.Interface, lister samplesv1alpha1.AddressableServiceLister, recorder record.EventRecorder, r Interface) controller.Reconciler {
 	return &reconcilerImpl{
-		Client:        client,
-		Lister:        lister,
-		Recorder:      recorder,
-		finalizerName: finalizerName,
-		reconciler:    r,
+		Client:     client,
+		Lister:     lister,
+		Recorder:   recorder,
+		reconciler: r,
 	}
 }
 
@@ -113,26 +112,23 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 	// Don't modify the informers copy.
 	resource := original.DeepCopy()
 
-	// For finalizing reconcilers, if this resource is not being deleted, mark the finalizer.
-	if r.isFinalizing() && resource.GetDeletionTimestamp().IsZero() {
-		r.setFinalizer(resource)
-	}
-
-	// Reconcile this copy of the resource and then write back any status
-	// updates regardless of whether the reconciliation errored out.
-	reconcileEvent := r.reconciler.ReconcileKind(ctx, resource)
-
-	// For finalizing reconcilers, if this resource being marked for deletion
-	// and reconciled cleanly (nil or normal event), remove the finalizer.
-	if r.isFinalizing() && !resource.GetDeletionTimestamp().IsZero() {
-		if reconcileEvent != nil {
-			var event *reconciler.ReconcilerEvent
-			if reconciler.EventAs(reconcileEvent, &event) {
-				if event.EventType == v1.EventTypeNormal {
-					r.clearFinalizer(resource)
-				}
-			}
+	var reconcileEvent reconciler.Event
+	if resource.GetDeletionTimestamp().IsZero() {
+		if r.isFinalizing() {
+			// For finalizing reconcilers, if this resource is not being deleted, mark the finalizer.
+			r.setFinalizer(resource)
 		} else {
+			logger.Errorf("NOT Finalizing: resource %q no longer exists", key)
+		}
+		// Reconcile this copy of the resource and then write back any status
+		// updates regardless of whether the reconciliation errored out.
+		reconcileEvent = r.reconciler.ReconcileKind(ctx, resource)
+	} else if fin, ok := r.reconciler.(Finalizer); ok {
+		// For finalizing reconcilers, if this resource being marked for deletion
+		// and reconciled cleanly (nil or normal event), remove the finalizer.
+		reconcileEvent = fin.FinalizeKind(ctx, resource)
+		if reconcileEvent == nil {
+			// TODO: this needs to check if nil or Normal.
 			r.clearFinalizer(resource)
 		}
 	}
@@ -205,10 +201,7 @@ func (r *reconcilerImpl) updateStatus(existing *v1alpha1.AddressableService, des
 // TODO: this method could be generic and sync all finalizers. For now it only
 // updates r.finalizerName.
 func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, bool, error) {
-	if r.finalizerName == nil {
-		return desired, false, nil
-	}
-	finalizerName := *r.finalizerName
+	finalizerName := defaultFinalizerName
 
 	actual, err := r.Lister.AddressableServices(desired.Namespace).Get(desired.Name)
 	if err != nil {
@@ -258,21 +251,18 @@ func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *
 }
 
 func (r *reconcilerImpl) isFinalizing() bool {
-	return r.finalizerName != nil
+	_, ok := r.reconciler.(Finalizer)
+	return ok
 }
 
 func (r *reconcilerImpl) setFinalizer(a *v1alpha1.AddressableService) {
-	if r.finalizerName != nil {
-		finalizers := sets.NewString(a.Finalizers...)
-		finalizers.Insert(*r.finalizerName)
-		a.Finalizers = finalizers.List()
-	}
+	finalizers := sets.NewString(a.Finalizers...)
+	finalizers.Insert(defaultFinalizerName)
+	a.Finalizers = finalizers.List()
 }
 
 func (r *reconcilerImpl) clearFinalizer(a *v1alpha1.AddressableService) {
-	if r.finalizerName != nil {
-		finalizers := sets.NewString(a.Finalizers...)
-		finalizers.Delete(*r.finalizerName)
-		a.Finalizers = finalizers.List()
-	}
+	finalizers := sets.NewString(a.Finalizers...)
+	finalizers.Delete(defaultFinalizerName)
+	a.Finalizers = finalizers.List()
 }

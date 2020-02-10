@@ -44,9 +44,6 @@ func NewController(
 	r := &Reconciler{}
 	impl := v1alpha1addressableservice.NewImpl(ctx, r)
 
-	// Alternatively, if AddressableService requires a finalizer:
-	// impl := v1alpha1addressableservice.NewFinalizingImpl(ctx, r, "")
-
 	logger.Info("Setting up event handlers.")
 
 	addressableserviceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))

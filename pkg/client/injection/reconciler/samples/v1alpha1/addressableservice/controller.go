@@ -20,8 +20,6 @@ package addressableservice
 
 import (
 	"context"
-	"strings"
-
 	corev1 "k8s.io/api/core/v1"
 	watch "k8s.io/apimachinery/pkg/watch"
 	scheme "k8s.io/client-go/kubernetes/scheme"
@@ -30,7 +28,6 @@ import (
 	client "knative.dev/pkg/client/injection/kube/client"
 	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
-	ptr "knative.dev/pkg/ptr"
 	versionedscheme "knative.dev/sample-controller/pkg/client/clientset/versioned/scheme"
 	injectionclient "knative.dev/sample-controller/pkg/client/injection/client"
 	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
@@ -46,27 +43,6 @@ const (
 // the queue through an implementation of controller.Reconciler, delegating to
 // the provided Interface.
 func NewImpl(ctx context.Context, r Interface) *controller.Impl {
-	logger := logging.FromContext(ctx)
-	rec := newRecordedReconcilerImpl(ctx, r)
-	return controller.NewImpl(rec, logger, defaultQueueName)
-}
-
-// NewFinalizingImpl returns a controller.Impl that handles queuing and feeding work from
-// the queue through an implementation of controller.Reconciler, delegating to
-// the provided Interface with automatic addition and removal of the provided
-// finalizer name.
-func NewFinalizingImpl(ctx context.Context, r Interface, finalizer string) *controller.Impl {
-	logger := logging.FromContext(ctx)
-	rec := newRecordedReconcilerImpl(ctx, r)
-	finalizer = strings.TrimSpace(finalizer)
-	if finalizer == "" {
-		finalizer = defaultFinalizerName
-	}
-	rec.finalizerName = ptr.String(finalizer)
-	return controller.NewImpl(rec, logger, defaultQueueName)
-}
-
-func newRecordedReconcilerImpl(ctx context.Context, r Interface) *reconcilerImpl {
 	logger := logging.FromContext(ctx)
 
 	addressableserviceInformer := addressableservice.Get(ctx)
@@ -90,12 +66,13 @@ func newRecordedReconcilerImpl(ctx context.Context, r Interface) *reconcilerImpl
 		}()
 	}
 
-	return &reconcilerImpl{
+	rec := &reconcilerImpl{
 		Client:     injectionclient.Get(ctx),
 		Lister:     addressableserviceInformer.Lister(),
 		Recorder:   recorder,
 		reconciler: r,
 	}
+	return controller.NewImpl(rec, logger, defaultQueueName)
 }
 
 func init() {
