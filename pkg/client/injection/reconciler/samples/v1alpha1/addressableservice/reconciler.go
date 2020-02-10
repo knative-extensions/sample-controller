@@ -32,7 +32,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 	cache "k8s.io/client-go/tools/cache"
 	record "k8s.io/client-go/tools/record"
-	retry "k8s.io/client-go/util/retry"
 	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
 	reconciler "knative.dev/pkg/reconciler"
@@ -141,12 +140,12 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 		// If we didn't change finalizers then don't call updateFinalizersFiltered.
 	} else if _, updated, fErr := r.updateFinalizersFiltered(ctx, resource); fErr != nil {
 		logger.Warnw("Failed to update finalizers", zap.Error(fErr))
-		r.Recorder.Eventf(resource, v1.EventTypeWarning, "UpdateFailed",
+		r.Recorder.Eventf(resource, v1.EventTypeWarning, "FinalizerUpdateFailed",
 			"Failed to update finalizers for %q: %v", resource.Name, fErr)
 		return fErr
 	} else if updated {
 		// There was a difference and updateFinalizersFiltered said it updated and did not return an error.
-		r.Recorder.Eventf(resource, v1.EventTypeNormal, "Updated", "Updated %q finalizers", resource.GetName())
+		r.Recorder.Eventf(resource, v1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", resource.GetName())
 	}
 
 	// Synchronize the status.
@@ -180,7 +179,7 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 
 func (r *reconcilerImpl) updateStatus(existing *v1alpha1.AddressableService, desired *v1alpha1.AddressableService) error {
 	existing = existing.DeepCopy()
-	return RetryUpdateConflicts(func(attempts int) (err error) {
+	return reconciler.RetryUpdateConflicts(func(attempts int) (err error) {
 		// The first iteration tries to use the injectionInformer's state, subsequent attempts fetch the latest state via API.
 		if attempts > 0 {
 			existing, err = r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Get(desired.Name, metav1.GetOptions{})
@@ -196,18 +195,6 @@ func (r *reconcilerImpl) updateStatus(existing *v1alpha1.AddressableService, des
 
 		existing.Status = desired.Status
 		_, err = r.Client.SamplesV1alpha1().AddressableServices(existing.Namespace).UpdateStatus(existing)
-		return err
-	})
-}
-
-// TODO: move this to knative.dev/pkg/reconciler
-// RetryUpdateConflicts retries the inner function if it returns conflict errors.
-// This can be used to retry status updates without constantly reenqueuing keys.
-func RetryUpdateConflicts(updater func(int) error) error {
-	attempts := 0
-	return retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		err := updater(attempts)
-		attempts++
 		return err
 	})
 }
