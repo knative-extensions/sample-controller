@@ -193,10 +193,10 @@ func (r *reconcilerImpl) updateStatus(existing *v1alpha1.AddressableService, des
 // updateFinalizersFiltered will update the Finalizers of the resource.
 // TODO: this method could be generic and sync all finalizers. For now it only
 // updates defaultFinalizerName.
-func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *v1alpha1.AddressableService) error {
+func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, resource *v1alpha1.AddressableService) error {
 	finalizerName := defaultFinalizerName
 
-	actual, err := r.Lister.AddressableServices(desired.Namespace).Get(desired.Name)
+	actual, err := r.Lister.AddressableServices(resource.Namespace).Get(resource.Name)
 	if err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *
 
 	// If there's nothing to update, just return.
 	existingFinalizers := sets.NewString(existing.Finalizers...)
-	desiredFinalizers := sets.NewString(desired.Finalizers...)
+	desiredFinalizers := sets.NewString(resource.Finalizers...)
 
 	if desiredFinalizers.Has(finalizerName) {
 		if existingFinalizers.Has(finalizerName) {
@@ -239,7 +239,14 @@ func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *
 		return err
 	}
 
-	update, err := r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Patch(existing.Name, types.MergePatchType, patch)
+	_, err = r.Client.SamplesV1alpha1().AddressableServices(resource.Namespace).Patch(resource.Name, types.MergePatchType, patch)
+	if err != nil {
+		r.Recorder.Eventf(resource, v1.EventTypeWarning, "FinalizerUpdateFailed",
+			"Failed to update finalizers for %q: %v", resource.Name, err)
+	} else {
+		r.Recorder.Eventf(resource, v1.EventTypeNormal, "FinalizerUpdate",
+			"Updated %q finalizers", resource.GetName())
+	}
 	return err
 }
 
@@ -248,7 +255,7 @@ func (r *reconcilerImpl) setFinalizerIfFinalizer(ctx context.Context, resource *
 		return nil
 	}
 
-	finalizers := sets.NewString(a.Finalizers...)
+	finalizers := sets.NewString(resource.Finalizers...)
 
 	// If this resource is not being deleted, mark the finalizer.
 	if resource.GetDeletionTimestamp().IsZero() {
