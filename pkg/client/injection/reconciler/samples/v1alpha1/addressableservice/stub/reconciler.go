@@ -43,6 +43,9 @@ type Reconciler struct {
 // Check that our Reconciler implements Interface
 var _ addressableservice.Interface = (*Reconciler)(nil)
 
+// Optionally check that our Reconciler implements Finalizer
+//var _ addressableservice.Finalizer = (*Reconciler)(nil)
+
 // ReconcileKind implements Interface.ReconcileKind.
 func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event {
 	o.Status.InitializeConditions()
@@ -55,7 +58,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableS
 
 // Optionally, use FinalizeKind to add finalizers. FinalizeKind will be called
 // when the resource is deleted.
-func (r *Reconciler) FinalizeKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event {
-	// TODO: add custom finalization logic here.
-	return nil
-}
+//func (r *Reconciler) FinalizeKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event {
+//	// TODO: add custom finalization logic here.
+//	return nil
+//}

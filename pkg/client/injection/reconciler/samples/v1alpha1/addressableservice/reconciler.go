@@ -121,7 +121,7 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 
 	var reconcileEvent reconciler.Event
 	if resource.GetDeletionTimestamp().IsZero() {
-		if r.isFinalizing() {
+		if _, ok := r.reconciler.(Finalizer); ok {
 			// For finalizing reconcilers, if this resource is not being deleted, mark the finalizer.
 			r.setFinalizer(resource)
 		}
@@ -259,11 +259,6 @@ func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *
 
 	update, err := r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Patch(existing.Name, types.MergePatchType, patch)
 	return update, true, err
-}
-
-func (r *reconcilerImpl) isFinalizing() bool {
-	_, ok := r.reconciler.(Finalizer)
-	return ok
 }
 
 func (r *reconcilerImpl) setFinalizer(a *v1alpha1.AddressableService) {

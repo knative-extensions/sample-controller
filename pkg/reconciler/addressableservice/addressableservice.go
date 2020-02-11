@@ -52,7 +52,8 @@ type Reconciler struct {
 
 // Check that our Reconciler implements Interface
 var _ addressableservicereconciler.Interface = (*Reconciler)(nil)
-var _ addressableservicereconciler.Finalizer = (*Reconciler)(nil)
+
+//var _ addressableservicereconciler.Finalizer = (*Reconciler)(nil)
 
 // ReconcileKind implements Interface.ReconcileKind.
 func (r *Reconciler) ReconcileKind(ctx context.Context, o *samplesv1alpha1.AddressableService) reconciler.Event {
@@ -104,6 +105,7 @@ func (r *Reconciler) reconcileForService(ctx context.Context, asvc *samplesv1alp
 	return nil
 }
 
+//
 func (r *Reconciler) FinalizeKind(ctx context.Context, o *samplesv1alpha1.AddressableService) reconciler.Event {
 	// TODO: add custom finalization logic here.
 	return nil
