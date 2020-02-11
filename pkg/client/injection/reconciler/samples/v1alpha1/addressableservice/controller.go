@@ -20,6 +20,7 @@ package addressableservice
 
 import (
 	"context"
+
 	corev1 "k8s.io/api/core/v1"
 	watch "k8s.io/apimachinery/pkg/watch"
 	scheme "k8s.io/client-go/kubernetes/scheme"
@@ -41,10 +42,9 @@ const (
 
 // NewImpl returns a controller.Impl that handles queuing and feeding work from
 // the queue through an implementation of controller.Reconciler, delegating to
-// the provided Interface.
+// the provided Interface and optional Finalizer methods.
 func NewImpl(ctx context.Context, r Interface) *controller.Impl {
 	logger := logging.FromContext(ctx)
-
 	addressableserviceInformer := addressableservice.Get(ctx)
 
 	recorder := controller.GetEventRecorder(ctx)

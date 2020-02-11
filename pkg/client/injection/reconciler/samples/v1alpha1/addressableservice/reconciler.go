@@ -47,12 +47,19 @@ type Interface interface {
 	// to the objects .Status or .Finalizers will be propagated to the stored
 	// object. It is recommended that implementors do not call any update calls
 	// for the Kind inside of ReconcileKind, it is the responsibility of the calling
-	// controller to propagate those properties.
+	// controller to propagate those properties. The resource passed to ReconcileKind
+	// will always have an empty deletion timestamp.
 	ReconcileKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event
 }
 
+// Finalizer defines the strongly typed interfaces to be implemented by a
+// controller finalizing v1alpha1.AddressableService.
 type Finalizer interface {
-	// FinalizeKind implements custom logic to finalize v1alpha1.AddressableService.
+	// FinalizeKind implements custom logic to finalize v1alpha1.AddressableService. Any changes
+	// to the objects .Status or .Finalizers will be ignored. Returning a nil or
+	// Normal type reconciler.Event will allow the finalizer to be deleted on
+	// the resource. The resource passed to FinalizeKind will always have a set
+	// deletion timestamp.
 	FinalizeKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event
 }
 
@@ -117,8 +124,6 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 		if r.isFinalizing() {
 			// For finalizing reconcilers, if this resource is not being deleted, mark the finalizer.
 			r.setFinalizer(resource)
-		} else {
-			logger.Errorf("NOT Finalizing: resource %q no longer exists", key)
 		}
 		// Reconcile this copy of the resource and then write back any status
 		// updates regardless of whether the reconciliation errored out.
@@ -127,13 +132,19 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 		// For finalizing reconcilers, if this resource being marked for deletion
 		// and reconciled cleanly (nil or normal event), remove the finalizer.
 		reconcileEvent = fin.FinalizeKind(ctx, resource)
-		if reconcileEvent == nil {
-			// TODO: this needs to check if nil or Normal.
+		if reconcileEvent != nil {
+			var event *reconciler.ReconcilerEvent
+			if reconciler.EventAs(reconcileEvent, &event) {
+				if event.EventType == v1.EventTypeNormal {
+					r.clearFinalizer(resource)
+				}
+			}
+		} else {
 			r.clearFinalizer(resource)
 		}
 	}
 
-	// Synchronize the finalizers filtered by r.finalizerName.
+	// Synchronize the finalizers filtered by defaultFinalizerName.
 	if equality.Semantic.DeepEqual(original.Finalizers, resource.Finalizers) {
 		// If we didn't change finalizers then don't call updateFinalizersFiltered.
 	} else if _, updated, fErr := r.updateFinalizersFiltered(ctx, resource); fErr != nil {
@@ -199,7 +210,7 @@ func (r *reconcilerImpl) updateStatus(existing *v1alpha1.AddressableService, des
 
 // updateFinalizersFiltered will update the Finalizers of the resource.
 // TODO: this method could be generic and sync all finalizers. For now it only
-// updates r.finalizerName.
+// updates defaultFinalizerName.
 func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, bool, error) {
 	finalizerName := defaultFinalizerName
 

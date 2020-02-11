@@ -53,7 +53,9 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, o *v1alpha1.AddressableS
 	return newReconciledNormal(o.Namespace, o.Name)
 }
 
-//func (r *Reconciler) FinalizeKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event {
-//	// TODO: add custom finalization logic here.
-//	return nil
-//}
+// Optionally, use FinalizeKind to add finalizers. FinalizeKind will be called
+// when the resource is deleted.
+func (r *Reconciler) FinalizeKind(ctx context.Context, o *v1alpha1.AddressableService) reconciler.Event {
+	// TODO: add custom finalization logic here.
+	return nil
+}
