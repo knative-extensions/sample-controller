@@ -18,6 +18,7 @@ package addressableservice
 
 import (
 	"context"
+
 	"knative.dev/pkg/tracker"
 
 	corev1 "k8s.io/api/core/v1"
