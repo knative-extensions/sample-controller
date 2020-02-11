@@ -36,15 +36,12 @@ import (
 
 const (
 	defaultControllerAgentName = "addressableservice-controller"
-	defaultFinalizerName       = "addressableservices.samples.knative.dev"
-	defaultQueueName           = "addressableservices"
+	defaultFinalizerName       = "addressableservice"
 )
 
-// NewImpl returns a controller.Impl that handles queuing and feeding work from
-// the queue through an implementation of controller.Reconciler, delegating to
-// the provided Interface and optional Finalizer methods.
 func NewImpl(ctx context.Context, r Interface) *controller.Impl {
 	logger := logging.FromContext(ctx)
+
 	addressableserviceInformer := addressableservice.Get(ctx)
 
 	recorder := controller.GetEventRecorder(ctx)
@@ -66,13 +63,16 @@ func NewImpl(ctx context.Context, r Interface) *controller.Impl {
 		}()
 	}
 
-	rec := &reconcilerImpl{
-		Client:     injectionclient.Get(ctx),
-		Lister:     addressableserviceInformer.Lister(),
-		Recorder:   recorder,
-		reconciler: r,
+	c := &reconcilerImpl{
+		Client:        injectionclient.Get(ctx),
+		Lister:        addressableserviceInformer.Lister(),
+		Recorder:      recorder,
+		FinalizerName: defaultFinalizerName,
+		reconciler:    r,
 	}
-	return controller.NewImpl(rec, logger, defaultQueueName)
+	impl := controller.NewImpl(c, logger, "addressableservices")
+
+	return impl
 }
 
 func init() {
