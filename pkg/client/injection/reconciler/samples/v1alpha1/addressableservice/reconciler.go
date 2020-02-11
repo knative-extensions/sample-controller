@@ -121,10 +121,10 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 
 	var reconcileEvent reconciler.Event
 	if resource.GetDeletionTimestamp().IsZero() {
-		if _, ok := r.reconciler.(Finalizer); ok {
-			// For finalizing reconcilers, if this resource is not being deleted, mark the finalizer.
-			r.setFinalizer(resource)
-		}
+		// Set and update the finalizer on resource if r.reconciler
+		// implements Finalizer.
+		r.setFinalizersIfFinalizer(ctx, resource)
+
 		// Reconcile this copy of the resource and then write back any status
 		// updates regardless of whether the reconciliation errored out.
 		reconcileEvent = r.reconciler.ReconcileKind(ctx, resource)
@@ -132,29 +132,7 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 		// For finalizing reconcilers, if this resource being marked for deletion
 		// and reconciled cleanly (nil or normal event), remove the finalizer.
 		reconcileEvent = fin.FinalizeKind(ctx, resource)
-		if reconcileEvent != nil {
-			var event *reconciler.ReconcilerEvent
-			if reconciler.EventAs(reconcileEvent, &event) {
-				if event.EventType == v1.EventTypeNormal {
-					r.clearFinalizer(resource)
-				}
-			}
-		} else {
-			r.clearFinalizer(resource)
-		}
-	}
-
-	// Synchronize the finalizers filtered by defaultFinalizerName.
-	if equality.Semantic.DeepEqual(original.Finalizers, resource.Finalizers) {
-		// If we didn't change finalizers then don't call updateFinalizersFiltered.
-	} else if _, updated, fErr := r.updateFinalizersFiltered(ctx, resource); fErr != nil {
-		logger.Warnw("Failed to update finalizers", zap.Error(fErr))
-		r.Recorder.Eventf(resource, v1.EventTypeWarning, "FinalizerUpdateFailed",
-			"Failed to update finalizers for %q: %v", resource.Name, fErr)
-		return fErr
-	} else if updated {
-		// There was a difference and updateFinalizersFiltered said it updated and did not return an error.
-		r.Recorder.Eventf(resource, v1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", resource.GetName())
+		r.clearFinalizer(ctx, resource, reconcileEvent)
 	}
 
 	// Synchronize the status.
@@ -208,15 +186,66 @@ func (r *reconcilerImpl) updateStatus(existing *v1alpha1.AddressableService, des
 	})
 }
 
+func (r *reconcilerImpl) setFinalizersIfFinalizer(ctx context.Context, resource *v1alpha1.AddressableService) error {
+	if _, ok := r.reconciler.(Finalizer); !ok {
+		return nil
+	}
+
+	finalizers := sets.NewString(a.Finalizers...)
+
+	// If this resource is not being deleted, mark the finalizer.
+	if resource.GetDeletionTimestamp().IsZero() {
+		finalizers.Insert(defaultFinalizerName)
+	}
+
+	resource.Finalizers = finalizers.List()
+
+	// Synchronize the finalizers filtered by defaultFinalizerName.
+	if err := r.updateFinalizersFiltered(ctx, resource); err != nil {
+		logger.Warnw("Failed to update finalizers", zap.Error(err))
+		return err
+	}
+}
+
+func (r *reconcilerImpl) clearFinalizer(ctx context.Context, resource *v1alpha1.AddressableService, reconcileEvent reconciler.Event) error {
+	if _, ok := r.reconciler.(Finalizer); !ok {
+		return nil
+	}
+	if resource.GetDeletionTimestamp().IsZero() {
+		return nil
+	}
+
+	finalizers := sets.NewString(a.Finalizers...)
+
+	if reconcileEvent != nil {
+		var event *reconciler.ReconcilerEvent
+		if reconciler.EventAs(reconcileEvent, &event) {
+			if event.EventType == v1.EventTypeNormal {
+				finalizers.Delete(defaultFinalizerName)
+			}
+		}
+	} else {
+		finalizers.Delete(defaultFinalizerName)
+	}
+
+	resource.Finalizers = finalizers.List()
+
+	// Synchronize the finalizers filtered by defaultFinalizerName.
+	if err := r.updateFinalizersFiltered(ctx, resource); err != nil {
+		logger.Warnw("Failed to update finalizers", zap.Error(err))
+		return err
+	}
+}
+
 // updateFinalizersFiltered will update the Finalizers of the resource.
 // TODO: this method could be generic and sync all finalizers. For now it only
 // updates defaultFinalizerName.
-func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *v1alpha1.AddressableService) (*v1alpha1.AddressableService, bool, error) {
+func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *v1alpha1.AddressableService) error {
 	finalizerName := defaultFinalizerName
 
 	actual, err := r.Lister.AddressableServices(desired.Namespace).Get(desired.Name)
 	if err != nil {
-		return nil, false, err
+		return err
 	}
 
 	// Don't modify the informers copy.
@@ -231,14 +260,14 @@ func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *
 	if desiredFinalizers.Has(finalizerName) {
 		if existingFinalizers.Has(finalizerName) {
 			// Nothing to do.
-			return desired, false, nil
+			return nil
 		}
 		// Add the finalizer.
 		finalizers = append(existing.Finalizers, finalizerName)
 	} else {
 		if !existingFinalizers.Has(finalizerName) {
 			// Nothing to do.
-			return desired, false, nil
+			return nil
 		}
 		// Remove the finalizer.
 		existingFinalizers.Delete(finalizerName)
@@ -254,21 +283,15 @@ func (r *reconcilerImpl) updateFinalizersFiltered(ctx context.Context, desired *
 
 	patch, err := json.Marshal(mergePatch)
 	if err != nil {
-		return desired, false, err
+		return err
 	}
 
-	update, err := r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Patch(existing.Name, types.MergePatchType, patch)
-	return update, true, err
-}
-
-func (r *reconcilerImpl) setFinalizer(a *v1alpha1.AddressableService) {
-	finalizers := sets.NewString(a.Finalizers...)
-	finalizers.Insert(defaultFinalizerName)
-	a.Finalizers = finalizers.List()
-}
-
-func (r *reconcilerImpl) clearFinalizer(a *v1alpha1.AddressableService) {
-	finalizers := sets.NewString(a.Finalizers...)
-	finalizers.Delete(defaultFinalizerName)
-	a.Finalizers = finalizers.List()
+	_, err = r.Client.SamplesV1alpha1().AddressableServices(desired.Namespace).Patch(existing.Name, types.MergePatchType, patch)
+	if err != nil {
+		r.Recorder.Eventf(resource, v1.EventTypeNormal, "FinalizerUpdate", "Updated %q finalizers", resource.GetName())
+	} else {
+		r.Recorder.Eventf(resource, v1.EventTypeWarning, "FinalizerUpdateFailed",
+			"Failed to update finalizers for %q: %v", resource.Name, fErr)
+	}
+	return err
 }
