@@ -742,7 +742,7 @@
   version = "v0.17.2"
 
 [[projects]]
-  digest = "1:814703684a5e0baf4a4dc15fe892bfb266c57d66db5d6d89996cdec36efb2fc1"
+  digest = "1:90bae9a26d98f85900a8fd7ce76ea9bc429e90b279efbcdfd8814d92b39ccfe0"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -782,6 +782,7 @@
     "pkg/util/runtime",
     "pkg/util/sets",
     "pkg/util/strategicpatch",
+    "pkg/util/uuid",
     "pkg/util/validation",
     "pkg/util/validation/field",
     "pkg/util/wait",
@@ -796,7 +797,7 @@
   version = "kubernetes-1.16.4"
 
 [[projects]]
-  digest = "1:d5b26b8dfb8f6a0c8486b8d5957ae31b7605c3168e2e13b8ae5531c62eb3e98d"
+  digest = "1:bc47f1dc5e4413e331a87d5412955654148df35bbf83d7057d0c45c35a3a2e09"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -944,6 +945,8 @@
     "tools/clientcmd/api",
     "tools/clientcmd/api/latest",
     "tools/clientcmd/api/v1",
+    "tools/leaderelection",
+    "tools/leaderelection/resourcelock",
     "tools/metrics",
     "tools/pager",
     "tools/record",
@@ -1038,7 +1041,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:18e38e0ec694fdad73da5156624020664b1950c8f919216f75896c31323eb8a7"
+  digest = "1:5a1686615370a9501192d7bd36dd8cee47e73d56c3576dee4737dd9db5c01d7d"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1060,6 +1063,7 @@
     "injection/sharedmain",
     "kmeta",
     "kmp",
+    "leaderelection",
     "logging",
     "logging/logkey",
     "metrics",
@@ -1081,7 +1085,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "bb008a5b533c110945aad45df24877c39bc5f792"
+  revision = "2fe8db30007231e4157929b781ad457f371e422d"
 
 [[projects]]
   branch = "master"
@@ -1092,7 +1096,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "908ad6cdb8e4aab96cdf0d94f766db7caf4fe129"
+  revision = "4dac123b9a3d14d2e07b4a59fbac0b0e99a09e92"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
