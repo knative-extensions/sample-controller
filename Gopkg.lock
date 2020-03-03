@@ -1041,7 +1041,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5a1686615370a9501192d7bd36dd8cee47e73d56c3576dee4737dd9db5c01d7d"
+  digest = "1:8599e892ef7b4613f138689826e24cf7ce0db32faac658babd6f60bc6c1db8b8"
   name = "knative.dev/pkg"
   packages = [
     "apis",
@@ -1085,7 +1085,7 @@
     "webhook/resourcesemantics/validation",
   ]
   pruneopts = "T"
-  revision = "2fe8db30007231e4157929b781ad457f371e422d"
+  revision = "73701f1aa50ece37d044bd843a13cac6a84e3939"
 
 [[projects]]
   branch = "master"
@@ -1096,7 +1096,7 @@
     "tools/dep-collector",
   ]
   pruneopts = "UT"
-  revision = "4dac123b9a3d14d2e07b4a59fbac0b0e99a09e92"
+  revision = "7b384c28e66cb8561f3620bd91eb9d5680686a8c"
 
 [[projects]]
   digest = "1:8730e0150dfb2b7e173890c8b9868e7a273082ef8e39f4940e3506a481cf895c"
