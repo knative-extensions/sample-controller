@@ -37,7 +37,7 @@ spec:
       - name: controller
         # This is the Go import path for the binary that is containerized
         # and substituted here.
-        image: knative.dev/sample-controller/cmd/controller
+        image: ko://knative.dev/sample-controller/cmd/controller
         resources:
           # Request 2x what we saw running e2e
           requests:
