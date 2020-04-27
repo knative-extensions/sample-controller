@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/gobuffalo/envy v1.7.1 // indirect
+	github.com/google/licenseclassifier v0.0.0-20200402202327-879cb1424de0
 	github.com/grpc-ecosystem/grpc-gateway v1.12.2 // indirect
 	go.uber.org/zap v1.10.0
 	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect

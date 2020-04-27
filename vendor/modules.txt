@@ -103,6 +103,13 @@ github.com/google/go-cmp/cmp/internal/function
 github.com/google/go-cmp/cmp/internal/value
 # github.com/google/gofuzz v1.1.0
 github.com/google/gofuzz
+# github.com/google/licenseclassifier v0.0.0-20200402202327-879cb1424de0
+github.com/google/licenseclassifier
+github.com/google/licenseclassifier/internal/sets
+github.com/google/licenseclassifier/stringclassifier
+github.com/google/licenseclassifier/stringclassifier/internal/pq
+github.com/google/licenseclassifier/stringclassifier/searchset
+github.com/google/licenseclassifier/stringclassifier/searchset/tokenizer
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
 # github.com/googleapis/gax-go/v2 v2.0.5
@@ -158,6 +165,8 @@ github.com/prometheus/procfs/internal/util
 github.com/rogpeppe/go-internal/modfile
 github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
+# github.com/sergi/go-diff v1.0.0
+github.com/sergi/go-diff/diffmatchpatch
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
 # go.opencensus.io v0.22.3
