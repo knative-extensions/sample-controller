@@ -23,27 +23,39 @@ set -o pipefail
 
 cd ${ROOT_DIR}
 
+# Parse flags to determine any we should pass to dep.
+# We need these flags for things to work properly.
+export GO111MODULE=on
+export GOFLAGS=-mod=vendor
+
+# This controls the release branch we track.
+VERSION="master"
+
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.
 FLOATING_DEPS=(
-  "knative.dev/pkg"
-  "knative.dev/test-infra"
+  "knative.dev/pkg@{$VERSION}"
+  "knative.dev/test-infra@{$VERSION}"
 )
 
-# Parse flags to determine any we should pass to dep.
-DEP_FLAGS=()
+GO_GET=0
 while [[ $# -ne 0 ]]; do
   parameter=$1
   case ${parameter} in
-    --upgrade) DEP_FLAGS=( -update ${FLOATING_DEPS[@]} ) ;;
+    --upgrade) GO_GET=1 ;;
     *) abort "unknown option ${parameter}" ;;
   esac
   shift
 done
-readonly DEP_FLAGS
+readonly GO_GET
 
-# Ensure we have everything we need under vendor/
-dep ensure ${DEP_FLAGS[@]}
+if (( GO_GET )); then
+    go get -d ${FLOATING_DEPS[@]}
+fi
+
+# Prune modules.
+go mod tidy
+go mod vendor
 
 rm -rf $(find vendor/ -name 'OWNERS')
 rm -rf $(find vendor/ -name '*_test.go')
