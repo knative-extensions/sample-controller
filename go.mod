@@ -20,5 +20,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.17.2 // indirect
 	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v0.17.2
+	k8s.io/code-generator v0.17.2
 	knative.dev/pkg v0.0.0-20200410152005-2a1db869228c
+	knative.dev/test-infra v0.0.0-20200424202250-e6e89d29e93a
 )
