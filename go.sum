@@ -892,8 +892,8 @@ k8s.io/utils v0.0.0-20190801114015-581e00157fb1/go.mod h1:sZAwmy6armz5eXlNoLmJcl
 k8s.io/utils v0.0.0-20190907131718-3d4f5b7dea0b h1:eMM0sTvh3KBVGwJfuNcU86P38TJhlVMAICbFPDG3t0M=
 k8s.io/utils v0.0.0-20190907131718-3d4f5b7dea0b/go.mod h1:sZAwmy6armz5eXlNoLmJcl4F1QuKu7sr+mFQ0byX7Ew=
 knative.dev/test-infra v0.0.0-20200407185800-1b88cb3b45a5/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=
-knative.dev/test-infra v0.0.0-20200424202250-e6e89d29e93a h1:O+N0J0RiB3tbYws4Bt0RHE+74N2L01eX2BruW/8pNtU=
-knative.dev/test-infra v0.0.0-20200424202250-e6e89d29e93a/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=
+knative.dev/test-infra v0.0.0-20200427164251-3205a40d6171 h1:4wfrZrJ4QIMfQRPfgEvil8XPlxivu/TZZDVax4nsMgA=
+knative.dev/test-infra v0.0.0-20200427164251-3205a40d6171/go.mod h1:xcdUkMJrLlBswIZqL5zCuBFOC22WIPMQoVX1L35i0vQ=
 modernc.org/cc v1.0.0/go.mod h1:1Sk4//wdnYJiUIxnW8ddKpaOJCF37yAdqYnkxUpaYxw=
 modernc.org/golex v1.0.0/go.mod h1:b/QX9oBD/LhixY6NDh+IdGv17hgB+51fET1i2kPSmvk=
 modernc.org/mathutil v1.0.0/go.mod h1:wU0vUrJsVWBZ4P6e7xtFJEhFSNsfRLJ8H458uRjg03k=

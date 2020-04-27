@@ -23,15 +23,22 @@ set -o pipefail
 
 cd ${ROOT_DIR}
 
+# Parse flags to determine any we should pass to dep.
+# We need these flags for things to work properly.
+export GO111MODULE=on
+export GOFLAGS=-mod=vendor
+
+# This controls the release branch we track.
+VERSION="master"
+
 # The list of dependencies that we track at HEAD and periodically
 # float forward in this repository.
 FLOATING_DEPS=(
-  "knative.dev/pkg"
-  "knative.dev/test-infra"
+  "knative.dev/pkg@{$VERSION}"
+  "knative.dev/test-infra@{$VERSION}"
 )
 
-# Parse flags to determine any we should pass to dep.
-declare -i GO_GET=0
+GO_GET=0
 while [[ $# -ne 0 ]]; do
   parameter=$1
   case ${parameter} in
