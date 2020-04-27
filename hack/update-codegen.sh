@@ -36,6 +36,7 @@ ${CODEGEN_PKG}/generate-groups.sh "deepcopy,client,informer,lister" \
   --go-header-file ${REPO_ROOT}/hack/boilerplate/boilerplate.go.txt
 
 # Knative Injection
+chmod +x ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh
 ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/sample-controller/pkg/client knative.dev/sample-controller/pkg/apis \
   "samples:v1alpha1" \
