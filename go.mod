@@ -20,7 +20,7 @@ require (
 	k8s.io/code-generator v0.18.0
 	k8s.io/kube-openapi v0.0.0-20200121204235-bf4fb3bd569c
 	knative.dev/pkg v0.0.0-20200427190051-6b9ee63b4aad
-	knative.dev/test-infra v0.0.0-20200427164251-3205a40d6171
+	knative.dev/test-infra v0.0.0-20200429211942-f4c4853375cf
 )
 
 replace (
