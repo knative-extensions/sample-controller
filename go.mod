@@ -13,8 +13,8 @@ require (
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/code-generator v0.18.0
 	k8s.io/kube-openapi v0.0.0-20200121204235-bf4fb3bd569c
-	knative.dev/pkg v0.0.0-20200508041145-19b1d7b64df3
-	knative.dev/test-infra v0.0.0-20200508015845-8d7d46a46176
+	knative.dev/pkg v0.0.0-20200509234445-b52862b1b3ea
+	knative.dev/test-infra v0.0.0-20200509000045-c7114387eed5
 )
 
 replace (
