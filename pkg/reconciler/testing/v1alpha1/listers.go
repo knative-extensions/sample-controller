@@ -17,7 +17,11 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"context"
+	"fmt"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/conversion"
 	"k8s.io/apimachinery/pkg/runtime"
 	fakekubeclientset "k8s.io/client-go/kubernetes/fake"
 	corev1listers "k8s.io/client-go/listers/core/v1"
@@ -26,11 +30,27 @@ import (
 	samplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	fakesampleclientset "knative.dev/sample-controller/pkg/client/clientset/versioned/fake"
 	sampleslister "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
+	"log"
+	"reflect"
 )
+
+func AddConverters(scheme *runtime.Scheme) error {
+	//	scheme.AddKnownTypeWithName(schema.GroupVersionKind{Group: "samples.knative.dev", Version: "v1alpha1", Kind: "AddressableService"}, &unstructured.Unstructured{})
+
+	scheme.AddConversionFunc(&unstructured.Unstructured{}, &samplesv1alpha1.AddressableService{}, func(a, b interface{}, scope conversion.Scope) error {
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(a.(*unstructured.Unstructured).Object, b); err != nil {
+			log.Fatalf("Error DefaultUnstructuredConverter.FromUnstructured. %v", err)
+		}
+		return nil
+	})
+
+	return nil
+}
 
 var clientSetSchemes = []func(*runtime.Scheme) error{
 	fakekubeclientset.AddToScheme,
 	fakesampleclientset.AddToScheme,
+	AddConverters,
 }
 
 type Listers struct {
@@ -44,9 +64,40 @@ func NewListers(objs []runtime.Object) Listers {
 		sorter: testing.NewObjectSorter(scheme),
 	}
 
-	ls.sorter.AddObjects(objs...)
+	ls.sorter.AddObjects(ToKnownObjects(objs)...)
 
 	return ls
+}
+
+func ToKnownObjects(objs []runtime.Object) []runtime.Object {
+	scheme := NewScheme()
+
+	known := make([]runtime.Object, 0)
+
+	for _, obj := range objs {
+		if reflect.TypeOf(obj) == reflect.TypeOf(&unstructured.Unstructured{}) { // I am sure there is a better way...
+			kind := obj.GetObjectKind()
+			if scheme.Recognizes(kind.GroupVersionKind()) {
+				// Try to pop the kind out of unstructured.Unstructured.
+				like, err := scheme.New(kind.GroupVersionKind())
+				if err != nil {
+					panic(err)
+				}
+				if err := scheme.Convert(obj, like, context.TODO()); err != nil {
+					panic(err)
+				}
+				like.GetObjectKind().SetGroupVersionKind(kind.GroupVersionKind())
+				known = append(known, like)
+
+			} else {
+				panic(fmt.Errorf("unregistered kind: %s", kind.GroupVersionKind().String()))
+			}
+		} else {
+			known = append(known, obj)
+		}
+	}
+
+	return known
 }
 
 func NewScheme() *runtime.Scheme {

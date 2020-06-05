@@ -61,12 +61,12 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, o *samplesv1alpha1.Addre
 		return nil
 	}
 	o.Status.InitializeConditions()
+	o.Status.ObservedGeneration = o.Generation
 
 	if err := r.reconcileForService(ctx, o); err != nil {
 		return err
 	}
 
-	o.Status.ObservedGeneration = o.Generation
 	return newReconciledNormal(o.Namespace, o.Name)
 }
 
