@@ -214,9 +214,5 @@ func (rt *ReconcilerTest) expectKubernetesEvents(attributes *messages.PickleStep
 }
 
 var (
-	//ignoreLastTransitionTime = cmp.FilterPath(func(p cmp.Path) bool {
-	//	return strings.HasSuffix(p.String(), "LastTransitionTime.Inner.Time")
-	//}, cmp.Ignore())
-
 	safeDeployDiff = cmpopts.IgnoreUnexported(resource.Quantity{})
 )
