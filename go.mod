@@ -7,14 +7,13 @@ require (
 	github.com/google/licenseclassifier v0.0.0-20200402202327-879cb1424de0
 	github.com/grpc-ecosystem/grpc-gateway v1.12.2 // indirect
 	go.uber.org/zap v1.14.1
-	gomodules.xyz/jsonpatch/v2 v2.1.0 // indirect
 	k8s.io/api v0.17.6
 	k8s.io/apimachinery v0.17.6
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
 	k8s.io/code-generator v0.18.0
 	k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29
-	knative.dev/pkg v0.0.0-20200606224418-7ed1d4a552bc
-	knative.dev/test-infra v0.0.0-20200606045118-14ebc4a42974
+	knative.dev/pkg v0.0.0-20200609184032-fef70cc2616b
+	knative.dev/test-infra v0.0.0-20200610052322-f0f63d4ead3d
 )
 
 replace (
