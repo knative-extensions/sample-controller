@@ -24,7 +24,7 @@ import (
 )
 
 // +genclient
-// +genreconciler
+// +genreconciler:krshapedlogic=true
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // AddressableService is a Knative abstraction that encapsulates the interface by which Knative
@@ -43,10 +43,14 @@ type AddressableService struct {
 	Status AddressableServiceStatus `json:"status,omitempty"`
 }
 
-// Check that AddressableService can be validated and defaulted.
-var _ apis.Validatable = (*AddressableService)(nil)
-var _ apis.Defaultable = (*AddressableService)(nil)
-var _ kmeta.OwnerRefable = (*AddressableService)(nil)
+var (
+	// Check that AddressableService can be validated and defaulted.
+	_ apis.Validatable   = (*AddressableService)(nil)
+	_ apis.Defaultable   = (*AddressableService)(nil)
+	_ kmeta.OwnerRefable = (*AddressableService)(nil)
+	// Check that the type conforms to the duck Knative Resource shape.
+	_ duckv1.KRShaped = (*AddressableService)(nil)
+)
 
 // AddressableServiceSpec holds the desired state of the AddressableService (from the client).
 type AddressableServiceSpec struct {
