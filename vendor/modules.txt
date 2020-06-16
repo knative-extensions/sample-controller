@@ -690,7 +690,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/pkg v0.0.0-20200609184032-fef70cc2616b
+# knative.dev/pkg v0.0.0-20200616011124-086ff4395641
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -733,7 +733,7 @@ knative.dev/pkg/webhook/configmaps
 knative.dev/pkg/webhook/resourcesemantics
 knative.dev/pkg/webhook/resourcesemantics/defaulting
 knative.dev/pkg/webhook/resourcesemantics/validation
-# knative.dev/test-infra v0.0.0-20200610052322-f0f63d4ead3d
+# knative.dev/test-infra v0.0.0-20200615231324-3a016f44102c
 ## explicit
 knative.dev/test-infra/scripts
 # sigs.k8s.io/yaml v1.2.0
