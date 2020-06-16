@@ -55,50 +55,35 @@ var _ addressableservicereconciler.Interface = (*Reconciler)(nil)
 
 // ReconcileKind implements Interface.ReconcileKind.
 func (r *Reconciler) ReconcileKind(ctx context.Context, o *samplesv1alpha1.AddressableService) reconciler.Event {
-	if o.GetDeletionTimestamp() != nil {
-		// Check for a DeletionTimestamp.  If present, elide the normal reconcile logic.
-		// When a controller needs finalizer handling, it would go here.
-		return nil
-	}
-	o.Status.InitializeConditions()
-
-	if err := r.reconcileForService(ctx, o); err != nil {
-		return err
-	}
-
-	o.Status.ObservedGeneration = o.Generation
-	return newReconciledNormal(o.Namespace, o.Name)
-}
-
-func (r *Reconciler) reconcileForService(ctx context.Context, asvc *samplesv1alpha1.AddressableService) error {
 	logger := logging.FromContext(ctx)
 
 	if err := r.Tracker.TrackReference(tracker.Reference{
 		APIVersion: "v1",
 		Kind:       "Service",
-		Name:       asvc.Spec.ServiceName,
-		Namespace:  asvc.Namespace,
-	}, asvc); err != nil {
-		logger.Errorf("Error tracking service %s: %v", asvc.Spec.ServiceName, err)
+		Name:       o.Spec.ServiceName,
+		Namespace:  o.Namespace,
+	}, o); err != nil {
+		logger.Errorf("Error tracking service %s: %v", o.Spec.ServiceName, err)
 		return err
 	}
 
-	_, err := r.ServiceLister.Services(asvc.Namespace).Get(asvc.Spec.ServiceName)
+	_, err := r.ServiceLister.Services(o.Namespace).Get(o.Spec.ServiceName)
 	if apierrs.IsNotFound(err) {
-		logger.Info("Service does not yet exist:", asvc.Spec.ServiceName)
-		asvc.Status.MarkServiceUnavailable(asvc.Spec.ServiceName)
+		logger.Info("Service does not yet exist:", o.Spec.ServiceName)
+		o.Status.MarkServiceUnavailable(o.Spec.ServiceName)
 		return nil
 	} else if err != nil {
-		logger.Errorf("Error reconciling service %s: %v", asvc.Spec.ServiceName, err)
+		logger.Errorf("Error reconciling service %s: %v", o.Spec.ServiceName, err)
 		return err
 	}
 
-	asvc.Status.MarkServiceAvailable()
-	asvc.Status.Address = &duckv1.Addressable{
+	o.Status.MarkServiceAvailable()
+	o.Status.Address = &duckv1.Addressable{
 		URL: &apis.URL{
 			Scheme: "http",
-			Host:   network.GetServiceHostname(asvc.Spec.ServiceName, asvc.Namespace),
+			Host:   network.GetServiceHostname(o.Spec.ServiceName, o.Namespace),
 		},
 	}
-	return nil
+
+	return newReconciledNormal(o.Namespace, o.Name)
 }

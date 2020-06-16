@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 var condSet = apis.NewLivingConditionSet()
@@ -30,6 +31,14 @@ func (as *AddressableService) GetGroupVersionKind() schema.GroupVersionKind {
 
 func (ass *AddressableServiceStatus) InitializeConditions() {
 	condSet.Manage(ass).InitializeConditions()
+}
+
+func (as *AddressableService) GetStatus() *duckv1.Status {
+	return &as.Status.Status
+}
+
+func (as *AddressableService) GetConditionSet() apis.ConditionSet {
+	return condSet
 }
 
 func (ass *AddressableServiceStatus) MarkServiceUnavailable(name string) {
