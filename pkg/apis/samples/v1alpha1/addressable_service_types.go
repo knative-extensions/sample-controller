@@ -82,3 +82,8 @@ type AddressableServiceList struct {
 
 	Items []AddressableService `json:"items"`
 }
+
+// GetStatus retrieves the status of the resource. Implements the KRShaped interface.
+func (as *AddressableService) GetStatus() *duckv1.Status {
+	return &as.Status.Status
+}
