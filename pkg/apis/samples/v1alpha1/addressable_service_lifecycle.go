@@ -19,26 +19,23 @@ package v1alpha1
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 )
 
 var condSet = apis.NewLivingConditionSet()
 
 // GetGroupVersionKind implements kmeta.OwnerRefable
-func (as *AddressableService) GetGroupVersionKind() schema.GroupVersionKind {
+func (*AddressableService) GetGroupVersionKind() schema.GroupVersionKind {
 	return SchemeGroupVersion.WithKind("AddressableService")
 }
 
-func (ass *AddressableServiceStatus) InitializeConditions() {
-	condSet.Manage(ass).InitializeConditions()
-}
-
-func (as *AddressableService) GetStatus() *duckv1.Status {
-	return &as.Status.Status
-}
-
+// GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
 func (as *AddressableService) GetConditionSet() apis.ConditionSet {
 	return condSet
+}
+
+// InitializeConditions sets the initial values to the conditions.
+func (ass *AddressableServiceStatus) InitializeConditions() {
+	condSet.Manage(ass).InitializeConditions()
 }
 
 func (ass *AddressableServiceStatus) MarkServiceUnavailable(name string) {
