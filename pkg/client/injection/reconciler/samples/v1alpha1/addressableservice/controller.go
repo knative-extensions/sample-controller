@@ -25,6 +25,8 @@ import (
 	strings "strings"
 
 	corev1 "k8s.io/api/core/v1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	scheme "k8s.io/client-go/kubernetes/scheme"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -32,6 +34,7 @@ import (
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
+	reconciler "knative.dev/pkg/reconciler"
 	versionedscheme "knative.dev/sample-controller/pkg/client/clientset/versioned/scheme"
 	client "knative.dev/sample-controller/pkg/client/injection/client"
 	addressableservice "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
@@ -56,9 +59,27 @@ func NewImpl(ctx context.Context, r Interface, optionsFns ...controller.OptionsF
 
 	addressableserviceInformer := addressableservice.Get(ctx)
 
+	lister := addressableserviceInformer.Lister()
+
 	rec := &reconcilerImpl{
+		LeaderAwareFuncs: reconciler.LeaderAwareFuncs{
+			PromoteFunc: func(bkt reconciler.Bucket, enq func(reconciler.Bucket, types.NamespacedName)) error {
+				all, err := lister.List(labels.Everything())
+				if err != nil {
+					return err
+				}
+				for _, elt := range all {
+					// TODO: Consider letting users specify a filter in options.
+					enq(bkt, types.NamespacedName{
+						Namespace: elt.GetNamespace(),
+						Name:      elt.GetName(),
+					})
+				}
+				return nil
+			},
+		},
 		Client:        client.Get(ctx),
-		Lister:        addressableserviceInformer.Lister(),
+		Lister:        lister,
 		reconciler:    r,
 		finalizerName: defaultFinalizerName,
 	}
