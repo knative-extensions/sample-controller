@@ -88,13 +88,7 @@ func admissionHandler(rootLogger *zap.SugaredLogger, stats StatsReporter, c Admi
 
 		ctx := logging.WithLogger(r.Context(), logger)
 
-		response := admissionv1.AdmissionReview{
-			// Use the same type meta as the request - this is required by the K8s API
-			// note: v1beta1 & v1 AdmissionReview shapes are identical so even though
-			// we're using v1 types we still support v1beta1 admission requests
-			TypeMeta: review.TypeMeta,
-		}
-
+		var response admissionv1.AdmissionReview
 		reviewResponse := c.Admit(ctx, review.Request)
 		var patchType string
 		if reviewResponse.PatchType != nil {
