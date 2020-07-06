@@ -50,9 +50,6 @@ spec:
         ports:
         - name: metrics
           containerPort: 9090
-        volumeMounts:
-        - name: config-logging
-          mountPath: /etc/config-logging
         env:
         - name: SYSTEM_NAMESPACE
           valueFrom:
@@ -64,7 +61,3 @@ spec:
           value: config-observability
         - name: METRICS_DOMAIN
           value: knative.dev/samples
-      volumes:
-        - name: config-logging
-          configMap:
-            name: config-logging
