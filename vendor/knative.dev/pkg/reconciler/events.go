@@ -79,8 +79,8 @@ func NewIfStatusUpdatedEvent(eventtype, reason, messageFmt string, args ...inter
 		Reason:    reason,
 		Format:    messageFmt,
 		Args:      args,
-		ConditionFn: func(f *Flags) bool {
-			if f.StatusUpdated && f.IsLeader {
+		ConditionFn: func(s *State) bool {
+			if s.IsStatusUpdated && s.IsLeader {
 				return true
 			}
 			return false

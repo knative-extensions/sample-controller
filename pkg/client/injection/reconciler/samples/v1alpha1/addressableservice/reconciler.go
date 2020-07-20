@@ -204,9 +204,9 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 
 	// Get the resource with this namespace/name.
 
-	getter := r.Lister.AddressableServices(namespace)
+	getter := r.Lister.AddressableServices(s.Namespace)
 
-	original, err := getter.Get(name)
+	original, err := getter.Get(s.Name)
 
 	if errors.IsNotFound(err) {
 		// The resource may no longer exist, in which case we stop processing.
