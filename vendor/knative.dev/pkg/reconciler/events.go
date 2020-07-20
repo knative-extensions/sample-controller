@@ -50,7 +50,7 @@ var EventIs = errors.Is
 // (text from errors/wrap.go)
 var EventAs = errors.As
 
-// NewEvent returns an Event fully populated.
+// NewEvent returns an Event fully populated without a conditional function.
 func NewEvent(eventtype, reason, messageFmt string, args ...interface{}) Event {
 	return &ReconcilerEvent{
 		EventType: eventtype,
@@ -60,6 +60,36 @@ func NewEvent(eventtype, reason, messageFmt string, args ...interface{}) Event {
 	}
 }
 
+// NewConditionalEvent returns an Event fully populated.
+func NewConditionalEvent(conditionFn ConditionalEventFn, eventtype, reason, messageFmt string, args ...interface{}) Event {
+	return &ReconcilerEvent{
+		EventType:   eventtype,
+		Reason:      reason,
+		Format:      messageFmt,
+		Args:        args,
+		ConditionFn: conditionFn,
+	}
+}
+
+// NewIfStatusUpdatedEvent returns an Event fully populated with the
+// conditional function set to watch for status updates from the leader.
+func NewIfStatusUpdatedEvent(eventtype, reason, messageFmt string, args ...interface{}) Event {
+	return &ReconcilerEvent{
+		EventType: eventtype,
+		Reason:    reason,
+		Format:    messageFmt,
+		Args:      args,
+		ConditionFn: func(f *Flags) bool {
+			if f.StatusUpdated && f.IsLeader {
+				return true
+			}
+			return false
+		},
+	}
+}
+
+type ConditionalEventFn func(state *State) bool
+
 // ReconcilerEvent wraps the fields required for recorders to create a
 // kubernetes recorder Event.
 type ReconcilerEvent struct {
@@ -67,6 +97,8 @@ type ReconcilerEvent struct {
 	Reason    string
 	Format    string
 	Args      []interface{}
+
+	ConditionFn ConditionalEventFn
 }
 
 // make sure ReconcilerEvent implements error.

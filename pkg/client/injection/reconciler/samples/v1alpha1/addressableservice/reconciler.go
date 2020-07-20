@@ -32,7 +32,6 @@ import (
 	labels "k8s.io/apimachinery/pkg/labels"
 	types "k8s.io/apimachinery/pkg/types"
 	sets "k8s.io/apimachinery/pkg/util/sets"
-	cache "k8s.io/client-go/tools/cache"
 	record "k8s.io/client-go/tools/record"
 	controller "knative.dev/pkg/controller"
 	logging "knative.dev/pkg/logging"
@@ -177,19 +176,19 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 	logger := logging.FromContext(ctx)
 
 	// Convert the namespace/name string into a distinct namespace and name
-	namespace, name, err := cache.SplitMetaNamespaceKey(key)
+	s, err := reconciler.NewState(key)
 	if err != nil {
 		logger.Errorf("invalid resource key: %s", key)
 		return nil
 	}
 	// Establish whether we are the leader for use below.
-	isLeader := r.IsLeaderFor(types.NamespacedName{
-		Namespace: namespace,
-		Name:      name,
-	})
-	roi, isROI := r.reconciler.(ReadOnlyInterface)
-	rof, isROF := r.reconciler.(ReadOnlyFinalizer)
-	if !isLeader && !isROI && !isROF {
+	s.IsLeader = r.IsLeaderFor(s.NamespacedName())
+
+	var roi ReadOnlyInterface
+	var rof ReadOnlyFinalizer
+	roi, s.IsROI = r.reconciler.(ReadOnlyInterface)
+	rof, s.IsROF = r.reconciler.(ReadOnlyFinalizer)
+	if s.IsNOP() {
 		// If we are not the leader, and we don't implement either ReadOnly
 		// interface, then take a fast-path out.
 		return nil
@@ -222,7 +221,7 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 
 	var reconcileEvent reconciler.Event
 	if resource.GetDeletionTimestamp().IsZero() {
-		if isLeader {
+		if s.IsLeader {
 			// Append the target method to the logger.
 			logger = logger.With(zap.String("targetMethod", "ReconcileKind"))
 
@@ -240,14 +239,14 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 
 			reconciler.PostProcessReconcile(ctx, resource, original)
 
-		} else if isROI {
+		} else if s.IsROI {
 			// Append the target method to the logger.
 			logger = logger.With(zap.String("targetMethod", "ObserveKind"))
 
 			// Observe any changes to this resource, since we are not the leader.
 			reconcileEvent = roi.ObserveKind(ctx, resource)
 		}
-	} else if fin, ok := r.reconciler.(Finalizer); isLeader && ok {
+	} else if fin, ok := r.reconciler.(Finalizer); s.IsLeader && ok {
 		// Append the target method to the logger.
 		logger = logger.With(zap.String("targetMethod", "FinalizeKind"))
 
@@ -257,7 +256,7 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 		if resource, err = r.clearFinalizer(ctx, resource, reconcileEvent); err != nil {
 			return fmt.Errorf("failed to clear finalizers: %w", err)
 		}
-	} else if !isLeader && isROF {
+	} else if !s.IsLeader && s.IsROF {
 		// Append the target method to the logger.
 		logger = logger.With(zap.String("targetMethod", "ObserveFinalizeKind"))
 
@@ -275,7 +274,7 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 		// This is important because the copy we loaded from the injectionInformer's
 		// cache may be stale and we don't want to overwrite a prior update
 		// to status with this stale state.
-	case !isLeader:
+	case !s.IsLeader:
 		// High-availability reconcilers may have many replicas watching the resource, but only
 		// the elected leader is expected to write modifications.
 		logger.Warn("Saw status changes when we aren't the leader!")
@@ -286,15 +285,17 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 				"Failed to update status for %q: %v", resource.Name, err)
 			return err
 		}
+		s.IsStatusUpdated = true
 	}
 
 	// Report the reconciler event, if any.
 	if reconcileEvent != nil {
 		var event *reconciler.ReconcilerEvent
 		if reconciler.EventAs(reconcileEvent, &event) {
-			logger.Infow("Returned an event", zap.Any("event", reconcileEvent))
-			r.Recorder.Eventf(resource, event.EventType, event.Reason, event.Format, event.Args...)
-
+			if s.ShouldRecord(event) {
+				logger.Infow("Returned an event", zap.Any("event", reconcileEvent))
+				r.Recorder.Eventf(resource, event.EventType, event.Reason, event.Format, event.Args...)
+			}
 			// the event was wrapped inside an error, consider the reconciliation as failed
 			if _, isEvent := reconcileEvent.(*reconciler.ReconcilerEvent); !isEvent {
 				return reconcileEvent
