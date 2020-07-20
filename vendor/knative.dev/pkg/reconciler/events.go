@@ -60,8 +60,8 @@ func NewEvent(eventtype, reason, messageFmt string, args ...interface{}) Event {
 	}
 }
 
-// NewConditionalEvent returns an Event fully populated.
-func NewConditionalEvent(conditionFn ConditionalEventFn, eventtype, reason, messageFmt string, args ...interface{}) Event {
+// NewEventConditional returns an Event fully populated.
+func NewEventConditional(conditionFn ConditionalEventFn, eventtype, reason, messageFmt string, args ...interface{}) Event {
 	return &ReconcilerEvent{
 		EventType:   eventtype,
 		Reason:      reason,
@@ -73,14 +73,14 @@ func NewConditionalEvent(conditionFn ConditionalEventFn, eventtype, reason, mess
 
 // NewIfStatusUpdatedEvent returns an Event fully populated with the
 // conditional function set to watch for status updates from the leader.
-func NewIfStatusUpdatedEvent(eventtype, reason, messageFmt string, args ...interface{}) Event {
+func NewEventIfStatusUpdated(eventtype, reason, messageFmt string, args ...interface{}) Event {
 	return &ReconcilerEvent{
 		EventType: eventtype,
 		Reason:    reason,
 		Format:    messageFmt,
 		Args:      args,
-		ConditionFn: func(s *State) bool {
-			if s.IsStatusUpdated && s.IsLeader {
+		ConditionFn: func(s State) bool {
+			if s.IsStatusUpdated() && s.IsLeader() {
 				return true
 			}
 			return false
@@ -88,7 +88,12 @@ func NewIfStatusUpdatedEvent(eventtype, reason, messageFmt string, args ...inter
 	}
 }
 
-type ConditionalEventFn func(state *State) bool
+type State interface {
+	IsStatusUpdated() bool
+	IsLeader() bool
+}
+
+type ConditionalEventFn func(state State) bool
 
 // ReconcilerEvent wraps the fields required for recorders to create a
 // kubernetes recorder Event.

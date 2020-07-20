@@ -36,7 +36,7 @@ import (
 // newReconciledNormal makes a new reconciler event with event type Normal, and
 // reason AddressableServiceReconciled.
 func newReconciledNormal(namespace, name string) reconciler.Event {
-	return reconciler.NewIfStatusUpdatedEvent(corev1.EventTypeNormal, "AddressableServiceReconciled", "AddressableService reconciled: \"%s/%s\"", namespace, name)
+	return reconciler.NewEventIfStatusUpdated(corev1.EventTypeNormal, "AddressableServiceReconciled", "AddressableService reconciled: \"%s/%s\"", namespace, name)
 }
 
 // Reconciler implements addressableservicereconciler.Interface for

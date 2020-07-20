@@ -14,12 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package reconciler
+package addressableservice
 
 import (
 	"fmt"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/cache"
+	"knative.dev/pkg/reconciler"
+	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
 
 // State is used to track the state of a reconciler in a single run.
@@ -31,26 +33,42 @@ type State struct {
 	// Namespace is the name split from the reconciliation key.
 	Name string
 
+	// reconciler is the reconciler.
+	reconciler Interface
+
+	// rof is the read only interface cast of the reconciler.
+	roi ReadOnlyInterface
 	// IsROI (Read Only Interface) the reconciler only observes reconciliation.
-	IsROI bool
+	isROI bool
+	// rof is the read only finalizer cast of the reconciler.
+	rof ReadOnlyFinalizer
 	// IsROF (Read Only Finalizer) the reconciler only observes finalize.
-	IsROF bool
+	isROF bool
 	// IsLeader the instance of the reconciler is the elected leader.
-	IsLeader bool
+	isLeader bool
 	// IsStatusUpdated the resource had its status updated successful.
-	IsStatusUpdated bool
+	isStatusUpdated bool
 }
 
-func NewState(key string) (*State, error) {
+func NewState(key string, reconciler Interface) (*State, error) {
 	// Convert the namespace/name string into a distinct namespace and name
 	namespace, name, err := cache.SplitMetaNamespaceKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("invalid resource key: %s", key)
 	}
+
+	roi, isROI := reconciler.(ReadOnlyInterface)
+	rof, isROF := reconciler.(ReadOnlyFinalizer)
+
 	return &State{
-		Key:       key,
-		Namespace: namespace,
-		Name:      name,
+		Key:        key,
+		Namespace:  namespace,
+		Name:       name,
+		reconciler: reconciler,
+		roi:        roi,
+		isROI:      isROI,
+		rof:        rof,
+		isROF:      isROF,
 	}, nil
 }
 
@@ -65,14 +83,17 @@ func (s *State) NamespacedName() types.NamespacedName {
 // IsNOP checks to see if this reconciler with the current state is enabled to
 // do any work or not.
 // IsNOP returns true when there is no work possible for the reconciler.
-func (s *State) IsNOP() bool {
-	if !s.IsLeader && !s.IsROI && !s.IsROF {
+func (s *State) IsNOP(isLeader bool) bool {
+	s.isLeader = isLeader
+	if !s.isLeader && !s.isROI && !s.isROF {
+		// If we are not the leader, and we don't implement either ReadOnly
+		// interface, then take a fast-path out.
 		return true
 	}
 	return false
 }
 
-func (s *State) ShouldRecord(event *ReconcilerEvent) bool {
+func (s *State) ShouldRecord(event *reconciler.ReconcilerEvent) bool {
 	if event.ConditionFn == nil {
 		return true
 	}
@@ -80,4 +101,34 @@ func (s *State) ShouldRecord(event *ReconcilerEvent) bool {
 		return true
 	}
 	return false
+}
+
+// IsLeader Implements knative.dev/pkg/reconciler/State.IsLeader
+func (s *State) IsLeader() bool {
+	return s.isLeader
+}
+
+// StatusUpdated  marks the status as being updated for this state.
+func (s *State) StatusUpdated() {
+	s.isStatusUpdated = true
+}
+
+// IsStatusUpdated Implements knative.dev/pkg/reconciler/State.IsStatusUpdated
+func (s *State) IsStatusUpdated() bool {
+	return s.isStatusUpdated
+}
+
+func (s *State) ReconcileMethodFor(resource *v1alpha1.AddressableService) (string, DoReconcile) {
+	if resource.GetDeletionTimestamp().IsZero() {
+		if s.isLeader {
+			return "ReconcileKind", s.reconciler.ReconcileKind
+		} else if s.isROI {
+			return "ObserveKind", s.roi.ObserveKind
+		}
+	} else if fin, ok := s.reconciler.(Finalizer); s.isLeader && ok {
+		return "FinalizeKind", fin.FinalizeKind
+	} else if !s.isLeader && s.isROF {
+		return "ObserveFinalizeKind", s.rof.ObserveFinalizeKind
+	}
+	return "unknown", nil
 }
