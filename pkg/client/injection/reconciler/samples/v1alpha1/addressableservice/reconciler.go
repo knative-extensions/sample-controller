@@ -184,7 +184,9 @@ func (r *reconcilerImpl) Reconcile(ctx context.Context, key string) error {
 		return nil
 	}
 
-	if s.IsNOP(r.IsLeaderFor(s.NamespacedName())) {
+	s.SetLeader(r.IsLeaderFor(s.NamespacedName()))
+
+	if s.IsNOP() {
 		// Nothing to do.
 		return nil
 	}

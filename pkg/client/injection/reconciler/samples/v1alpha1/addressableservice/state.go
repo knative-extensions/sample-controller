@@ -83,8 +83,7 @@ func (s *State) NamespacedName() types.NamespacedName {
 // IsNOP checks to see if this reconciler with the current state is enabled to
 // do any work or not.
 // IsNOP returns true when there is no work possible for the reconciler.
-func (s *State) IsNOP(isLeader bool) bool {
-	s.isLeader = isLeader
+func (s *State) IsNOP() bool {
 	if !s.isLeader && !s.isROI && !s.isROF {
 		// If we are not the leader, and we don't implement either ReadOnly
 		// interface, then take a fast-path out.
@@ -101,6 +100,10 @@ func (s *State) ShouldRecord(event *reconciler.ReconcilerEvent) bool {
 		return true
 	}
 	return false
+}
+
+func (s *State) SetLeader(isLeader bool) {
+	s.isLeader = isLeader
 }
 
 // IsLeader Implements knative.dev/pkg/reconciler/State.IsLeader
