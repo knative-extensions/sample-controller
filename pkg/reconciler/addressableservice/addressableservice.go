@@ -19,7 +19,6 @@ package addressableservice
 import (
 	"context"
 
-	corev1 "k8s.io/api/core/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	corev1listers "k8s.io/client-go/listers/core/v1"
 
@@ -32,12 +31,6 @@ import (
 	samplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	addressableservicereconciler "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/addressableservice"
 )
-
-// newReconciledNormal makes a new reconciler event with event type Normal, and
-// reason AddressableServiceReconciled.
-func newReconciledNormal(namespace, name string) reconciler.Event {
-	return reconciler.NewEvent(corev1.EventTypeNormal, "AddressableServiceReconciled", "AddressableService reconciled: \"%s/%s\"", namespace, name)
-}
 
 // Reconciler implements addressableservicereconciler.Interface for
 // AddressableService resources.
@@ -85,5 +78,5 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, o *samplesv1alpha1.Addre
 		},
 	}
 
-	return newReconciledNormal(o.Namespace, o.Name)
+	return nil
 }
