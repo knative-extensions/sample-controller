@@ -27,13 +27,22 @@ spec:
       role: webhook
   template:
     metadata:
-      annotations:
-        sidecar.istio.io/inject: "false"
       labels:
         app: webhook
         role: webhook
         samples.knative.dev/release: devel
     spec:
+      # To avoid node becoming SPOF, spread our replicas to different nodes.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: webhook
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+
       serviceAccountName: controller
       containers:
       - name: webhook
@@ -41,11 +50,9 @@ spec:
         # and substituted here.
         image: ko://knative.dev/sample-controller/cmd/webhook
         resources:
-          # Request 2x what we saw running e2e
           requests:
             cpu: 20m
             memory: 20Mi
-          # Limit to 10x the request (20x the observed peak during e2e)
           limits:
             cpu: 200m
             memory: 200Mi
