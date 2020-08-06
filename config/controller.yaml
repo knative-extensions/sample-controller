@@ -26,12 +26,21 @@ spec:
       app: controller
   template:
     metadata:
-      annotations:
-        sidecar.istio.io/inject: "false"
       labels:
         app: controller
         samples.knative.dev/release: devel
     spec:
+      # To avoid node becoming SPOF, spread our replicas to different nodes.
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: controller
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+
       serviceAccountName: controller
       containers:
       - name: controller
@@ -39,11 +48,9 @@ spec:
         # and substituted here.
         image: ko://knative.dev/sample-controller/cmd/controller
         resources:
-          # Request 2x what we saw running e2e
           requests:
             cpu: 100m
             memory: 100Mi
-          # Limit to 10x the request (20x the observed peak during e2e)
           limits:
             cpu: 1000m
             memory: 1000Mi
