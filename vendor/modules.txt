@@ -735,6 +735,9 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
+# knative.dev/hack v0.0.0-20201027201633-1763a666eb41
+## explicit
+knative.dev/hack
 # knative.dev/pkg v0.0.0-20201020033659-eafc8c6f72a7
 ## explicit
 knative.dev/pkg/apis
