@@ -100,6 +100,8 @@ ARTIFACTS_TO_PUBLISH=""
 FROM_NIGHTLY_RELEASE=""
 FROM_NIGHTLY_RELEASE_GCS=""
 export KO_DOCKER_REPO="gcr.io/knative-nightly"
+# Build stripped binary to reduce size
+export GOFLAGS="-ldflags=-s -ldflags=-w"
 export GITHUB_TOKEN=""
 
 # Convenience function to run the hub tool.
@@ -466,7 +468,6 @@ function parse_flags() {
   readonly RELEASE_BRANCH
   readonly RELEASE_GCS_BUCKET
   readonly RELEASE_DIR
-  readonly KO_DOCKER_REPO
   readonly VALIDATION_TESTS
   readonly FROM_NIGHTLY_RELEASE
 }
@@ -476,11 +477,16 @@ function parse_flags() {
 function run_validation_tests() {
   (( SKIP_TESTS )) && return
   banner "Running release validation tests"
+  # Unset KO_DOCKER_REPO and restore it after the tests are finished.
+  # This will allow the tests to define their own KO_DOCKER_REPO.
+  local old_docker_repo="${KO_DOCKER_REPO}"
+  unset KO_DOCKER_REPO
   # Run tests.
   if ! $1; then
     banner "Release validation tests failed, aborting"
     abort "release validation tests failed"
   fi
+  export KO_DOCKER_REPO="${old_docker_repo}"
 }
 
 # Publishes the generated artifacts to directory, GCS, GitHub, etc.
