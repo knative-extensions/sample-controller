@@ -98,6 +98,37 @@ function function_exists() {
   [[ "$(type -t $1)" == "function" ]]
 }
 
+# GitHub Actions aware output grouping.
+function group() {
+  # End the group is there is already a group.
+  if [ -z ${__GROUP_TRACKER+x} ]; then
+    export __GROUP_TRACKER="grouping"
+    trap end_group EXIT
+  else
+    end_group
+  fi
+  # Start a new group.
+  start_group "$@"
+}
+
+# GitHub Actions aware output grouping.
+function start_group() {
+  if [[ -n ${GITHUB_WORKFLOW:-} ]]; then
+    echo "::group::$@"
+    trap end_group EXIT
+  else
+    echo "--- $@"
+  fi
+}
+
+# GitHub Actions aware end of output grouping.
+function end_group() {
+  if [[ -n ${GITHUB_WORKFLOW:-} ]]; then
+    echo "::endgroup::"
+  fi
+}
+
+
 # Waits until the given object doesn't exist.
 # Parameters: $1 - the kind of the object.
 #             $2 - object's name.
@@ -353,13 +384,10 @@ function report_go_test() {
   report="$(mktemp)"
   local xml
   xml="$(mktemp_with_extension "${ARTIFACTS}"/junit_XXXXXXXX xml)"
-  local json
-  json="$(mktemp_with_extension "${ARTIFACTS}"/json_XXXXXXXX json)"
   echo "Running go test with args: ${go_test_args[*]}"
   # TODO(chizhg): change to `--format testname`?
   capture_output "${report}" gotestsum --format "${GO_TEST_VERBOSITY:-standard-verbose}" \
     --junitfile "${xml}" --junitfile-testsuite-name relative --junitfile-testcase-classname relative \
-    --jsonfile "${json}" \
     -- "${go_test_args[@]}"
   local failed=$?
   echo "Finished run, return code is ${failed}"
@@ -512,23 +540,26 @@ function go_update_deps() {
 
   export GO111MODULE=on
   export GOFLAGS=""
+  export GOSUMDB=off   # Do not use the sum.golang.org service.
 
   echo "=== Update Deps for Golang"
 
   local UPGRADE=0
-  local VERSION="master"
+  local VERSION="v9000.1" # release v9000 is so far in the future, it will always pick the default branch.
+  local DOMAIN="knative.dev"
   while [[ $# -ne 0 ]]; do
     parameter=$1
     case ${parameter} in
       --upgrade) UPGRADE=1 ;;
       --release) shift; VERSION="$1" ;;
+      --domain) shift; DOMAIN="$1" ;;
       *) abort "unknown option ${parameter}" ;;
     esac
     shift
   done
 
   if [[ $UPGRADE == 1 ]]; then
-    echo "--- Upgrading to ${VERSION}"
+    group "Upgrading to ${VERSION}"
     # From shell parameter expansion:
     # ${parameter:+word}
     # If parameter is null or unset, nothing is substituted, otherwise the expansion of word is substituted.
@@ -539,7 +570,7 @@ function go_update_deps() {
     else
       echo "Respecting 'GOPROXY=${GOPROXY}'."
     fi
-    FLOATING_DEPS+=( $(run_go_tool knative.dev/test-infra/buoy buoy float ${REPO_ROOT_DIR}/go.mod --release ${VERSION} --domain knative.dev) )
+    FLOATING_DEPS+=( $(run_go_tool knative.dev/test-infra/buoy buoy float ${REPO_ROOT_DIR}/go.mod --release ${VERSION} --domain ${DOMAIN}) )
     if [[ ${#FLOATING_DEPS[@]} > 0 ]]; then
       echo "Floating deps to ${FLOATING_DEPS[@]}"
       go get -d ${FLOATING_DEPS[@]}
@@ -548,24 +579,50 @@ function go_update_deps() {
     fi
   fi
 
-  echo "--- Go mod tidy and vendor"
+  group "Go mod tidy and vendor"
 
   # Prune modules.
-  go mod tidy
-  go mod vendor
+  local orig_pipefail_opt=$(shopt -p -o pipefail)
+  set -o pipefail
+  go mod tidy 2>&1 | grep -v "ignoring symlink" || true
+  go mod vendor 2>&1 |  grep -v "ignoring symlink" || true
+  eval "$orig_pipefail_opt"
 
-  echo "--- Removing unwanted vendor files"
+  group "Removing unwanted vendor files"
 
   # Remove unwanted vendor files
-  find vendor/ \( -name "OWNERS" -o -name "OWNERS_ALIASES" -o -name "BUILD" -o -name "BUILD.bazel" -o -name "*_test.go" \) -print0 | xargs -0 rm -f
+  find vendor/ \( -name "OWNERS" \
+    -o -name "OWNERS_ALIASES" \
+    -o -name "BUILD" \
+    -o -name "BUILD.bazel" \
+    -o -name "*_test.go" \) -exec rm -f {} +
 
   export GOFLAGS=-mod=vendor
 
-  echo "--- Updating licenses"
+  group "Updating licenses"
   update_licenses third_party/VENDOR-LICENSE "./..."
 
-  echo "--- Removing broken symlinks"
+  group "Removing broken symlinks"
   remove_broken_symlinks ./vendor
+}
+
+# Return the go module name of the current module.
+# Intended to be used like:
+#   export MODULE_NAME=$(go_mod_module_name)
+function go_mod_module_name() {
+  go mod graph | cut -d' ' -f 1 | grep -v '@' | head -1
+}
+
+# Return a GOPATH to a temp directory. Works around the out-of-GOPATH issues
+# for k8s client gen mixed with go mod.
+# Intended to be used like:
+#   export GOPATH=$(go_mod_gopath_hack)
+function go_mod_gopath_hack() {
+  local TMP_DIR="$(mktemp -d)"
+  local TMP_REPO_PATH="${TMP_DIR}/src/$(go_mod_module_name)"
+  mkdir -p "$(dirname "${TMP_REPO_PATH}")" && ln -s "${REPO_ROOT_DIR}" "${TMP_REPO_PATH}"
+
+  echo "${TMP_DIR}"
 }
 
 # Run kntest tool, error out and ask users to install it if it's not currently installed.
@@ -735,6 +792,14 @@ function shellcheck_new_files() {
   if [[ ${failed} -eq 1 ]]; then
     fail_script "shellcheck failures"
   fi
+}
+
+function latest_version() {
+  local semver=$(git describe --match "v[0-9]*" --abbrev=0)
+  local major_minor=$(echo "$semver" | cut -d. -f1-2)
+
+  # Get the latest patch release for the major minor
+  git tag -l "${major_minor}*" | sort -r --version-sort | head -n1
 }
 
 # Initializations that depend on previous functions.

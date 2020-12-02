@@ -3,16 +3,19 @@ module knative.dev/sample-controller
 go 1.14
 
 require (
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/google/licenseclassifier v0.0.0-20200708223521-3d09a0ea2f39
-	go.uber.org/zap v1.15.0
-	k8s.io/api v0.18.8
-	k8s.io/apimachinery v0.18.8
+	github.com/json-iterator/go v1.1.10 // indirect
+	github.com/prometheus/procfs v0.0.11 // indirect
+	github.com/sergi/go-diff v1.1.0 // indirect
+	go.uber.org/zap v1.16.0
+	k8s.io/api v0.18.12
+	k8s.io/apimachinery v0.18.12
 	k8s.io/client-go v11.0.1-0.20190805182717-6502b5e7b1b5+incompatible
-	k8s.io/code-generator v0.18.8
+	k8s.io/code-generator v0.18.12
 	k8s.io/kube-openapi v0.0.0-20200410145947-bcb3869e6f29
-	knative.dev/hack v0.0.0-20201027201633-1763a666eb41
-	knative.dev/pkg v0.0.0-20201020033659-eafc8c6f72a7
-	knative.dev/test-infra v0.0.0-20201020062259-cd8625126729 // indirect
+	knative.dev/hack v0.0.0-20201201234937-fddbf732e450
+	knative.dev/pkg v0.0.0-20201202014037-81712ed625fd
 )
 
 replace (
