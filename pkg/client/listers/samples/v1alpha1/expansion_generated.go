@@ -25,3 +25,11 @@ type AddressableServiceListerExpansion interface{}
 // AddressableServiceNamespaceListerExpansion allows custom methods to be added to
 // AddressableServiceNamespaceLister.
 type AddressableServiceNamespaceListerExpansion interface{}
+
+// SimpleDeploymentListerExpansion allows custom methods to be added to
+// SimpleDeploymentLister.
+type SimpleDeploymentListerExpansion interface{}
+
+// SimpleDeploymentNamespaceListerExpansion allows custom methods to be added to
+// SimpleDeploymentNamespaceLister.
+type SimpleDeploymentNamespaceListerExpansion interface{}

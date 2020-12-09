@@ -26,6 +26,8 @@ import (
 type Interface interface {
 	// AddressableServices returns a AddressableServiceInformer.
 	AddressableServices() AddressableServiceInformer
+	// SimpleDeployments returns a SimpleDeploymentInformer.
+	SimpleDeployments() SimpleDeploymentInformer
 }
 
 type version struct {
@@ -42,4 +44,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // AddressableServices returns a AddressableServiceInformer.
 func (v *version) AddressableServices() AddressableServiceInformer {
 	return &addressableServiceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// SimpleDeployments returns a SimpleDeploymentInformer.
+func (v *version) SimpleDeployments() SimpleDeploymentInformer {
+	return &simpleDeploymentInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

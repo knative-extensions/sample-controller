@@ -32,6 +32,10 @@ func (c *FakeSamplesV1alpha1) AddressableServices(namespace string) v1alpha1.Add
 	return &FakeAddressableServices{c, namespace}
 }
 
+func (c *FakeSamplesV1alpha1) SimpleDeployments(namespace string) v1alpha1.SimpleDeploymentInterface {
+	return &FakeSimpleDeployments{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeSamplesV1alpha1) RESTClient() rest.Interface {
