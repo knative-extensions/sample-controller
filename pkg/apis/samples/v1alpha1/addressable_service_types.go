@@ -23,12 +23,12 @@ import (
 	"knative.dev/pkg/kmeta"
 )
 
+// AddressableService is a Knative abstraction that encapsulates the interface by which Knative
+// components express a desire to have a particular image cached.
+//
 // +genclient
 // +genreconciler
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// AddressableService is a Knative abstraction that encapsulates the interface by which Knative
-// components express a desire to have a particular image cached.
 type AddressableService struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
@@ -73,9 +73,9 @@ type AddressableServiceStatus struct {
 	Address *duckv1.Addressable `json:"address,omitempty"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
 // AddressableServiceList is a list of AddressableService resources
+//
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 type AddressableServiceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
