@@ -9,7 +9,14 @@ run:
 
 linters:
   enable:
-    - unconvert
+    - asciicheck
+    - errorlint
+    - golint
+    - gosec
     - prealloc
+    - stylecheck
+    - tparallel
+    - unconvert
+    - unparam
   disable:
     - errcheck
