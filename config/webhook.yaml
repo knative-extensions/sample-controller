@@ -68,6 +68,14 @@ spec:
         - name: WEBHOOK_NAME
           value: webhook
 
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+            - all
+
         readinessProbe: &probe
           periodSeconds: 1
           httpGet:
