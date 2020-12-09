@@ -68,3 +68,11 @@ spec:
           value: config-observability
         - name: METRICS_DOMAIN
           value: knative.dev/samples
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+            - all
