@@ -1,6 +1,7 @@
 # The OWNERS file is used by prow to automatically merge approved PRs.
 
 approvers:
+- technical-oversight-committee
 - dprotaso
 - mattmoor
 - n3wscott
