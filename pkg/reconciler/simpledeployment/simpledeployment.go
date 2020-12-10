@@ -124,8 +124,11 @@ func makePod(d *v1alpha1.SimpleDeployment) *corev1.Pod {
 			Namespace:    d.Namespace,
 			GenerateName: d.Name + "-",
 			Labels: map[string]string{
+				// The label allows for easy querying of all the pods created.
 				podOwnerLabelKey: d.Name,
 			},
+			// The OwnerReference makes sure the pods get removed automatically once the
+			// SimpleDeployment is removed.
 			OwnerReferences: []metav1.OwnerReference{*kmeta.NewControllerRef(d)},
 		},
 		Spec: corev1.PodSpec{
