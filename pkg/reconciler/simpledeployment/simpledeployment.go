@@ -30,7 +30,6 @@ import (
 	"knative.dev/pkg/logging"
 	"knative.dev/pkg/reconciler"
 	"knative.dev/sample-controller/pkg/apis/samples"
-	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	samplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	simpledeploymentreconciler "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/simpledeployment"
 )
@@ -118,7 +117,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, d *samplesv1alpha1.Simpl
 
 // makePod generates a simple pod to be created in the given namespace with the given
 // image.
-func makePod(d *v1alpha1.SimpleDeployment) *corev1.Pod {
+func makePod(d *samplesv1alpha1.SimpleDeployment) *corev1.Pod {
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:    d.Namespace,
