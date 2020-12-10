@@ -19,7 +19,7 @@ metadata:
     samples.knative.dev/controller: "true"
 rules:
   - apiGroups: [""]
-    resources: ["configmaps", "services", "secrets", "events"]
+    resources: ["configmaps", "services", "secrets", "events", "pods"]
     verbs: ["get", "list", "create", "update", "delete", "patch", "watch"]
   - apiGroups: ["apps"]
     resources: ["deployments", "deployments/finalizers"] # finalizers are needed for the owner reference of the webhook

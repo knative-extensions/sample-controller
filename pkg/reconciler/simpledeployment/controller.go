@@ -36,12 +36,18 @@ func NewController(
 ) *controller.Impl {
 	logger := logging.FromContext(ctx)
 
+	// Obtain an informer to both the main and child resources. These will be started by
+	// the injection framework automatically. They'll keep a cached representation of the
+	// cluster's state of the respective resource at all times.
 	simpledeploymentInformer := simpledeploymentinformer.Get(ctx)
 	podInformer := podinformer.Get(ctx)
 
 	r := &Reconciler{
+		// The client will be needed to create/delete Pods via the API.
 		kubeclient: kubeclient.Get(ctx),
-		podLister:  podInformer.Lister(),
+		// A lister allows read-only access to the informer's cache, allowing us to cheaply
+		// read pod data.
+		podLister: podInformer.Lister(),
 	}
 	impl := simpledeploymentreconciler.NewImpl(ctx, r)
 

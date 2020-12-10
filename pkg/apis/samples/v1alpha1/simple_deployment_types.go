@@ -54,7 +54,8 @@ var (
 
 // SimpleDeploymentSpec holds the desired state of the SimpleDeployment (from the client).
 type SimpleDeploymentSpec struct {
-	Image string `json:"image"`
+	Image    string `json:"image"`
+	Replicas int32  `json:"replicas"`
 }
 
 const (
@@ -66,6 +67,8 @@ const (
 // SimpleDeploymentStatus communicates the observed state of the SimpleDeployment (from the controller).
 type SimpleDeploymentStatus struct {
 	duckv1.Status `json:",inline"`
+
+	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
 // SimpleDeploymentList is a list of AddressableService resources

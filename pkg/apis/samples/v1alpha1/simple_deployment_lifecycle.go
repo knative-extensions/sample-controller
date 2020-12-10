@@ -37,3 +37,16 @@ func (d *SimpleDeployment) GetConditionSet() apis.ConditionSet {
 func (ds *SimpleDeploymentStatus) InitializeConditions() {
 	simpleDeploymentCondSet.Manage(ds).InitializeConditions()
 }
+
+// MarkPodsNotReady makes the SimpleDeployment be not ready.
+func (ds *SimpleDeploymentStatus) MarkPodsNotReady(n int32) {
+	simpleDeploymentCondSet.Manage(ds).MarkFalse(
+		SimpleDeploymentConditionReady,
+		"PodsNotReady",
+		"%d pods are not ready yet", n)
+}
+
+// MarkPodsReady makes the SimpleDeployment be ready.
+func (ds *SimpleDeploymentStatus) MarkPodsReady() {
+	condSet.Manage(ds).MarkTrue(SimpleDeploymentConditionReady)
+}
