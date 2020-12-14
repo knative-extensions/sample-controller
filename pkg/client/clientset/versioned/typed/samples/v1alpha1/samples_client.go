@@ -27,6 +27,7 @@ import (
 type SamplesV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	AddressableServicesGetter
+	SimpleDeploymentsGetter
 }
 
 // SamplesV1alpha1Client is used to interact with features provided by the samples.knative.dev group.
@@ -36,6 +37,10 @@ type SamplesV1alpha1Client struct {
 
 func (c *SamplesV1alpha1Client) AddressableServices(namespace string) AddressableServiceInterface {
 	return newAddressableServices(c, namespace)
+}
+
+func (c *SamplesV1alpha1Client) SimpleDeployments(namespace string) SimpleDeploymentInterface {
+	return newSimpleDeployments(c, namespace)
 }
 
 // NewForConfig creates a new SamplesV1alpha1Client for the given config.

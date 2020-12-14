@@ -55,6 +55,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=samples.knative.dev, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("addressableservices"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Samples().V1alpha1().AddressableServices().Informer()}, nil
+	case v1alpha1.SchemeGroupVersion.WithResource("simpledeployments"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Samples().V1alpha1().SimpleDeployments().Informer()}, nil
 
 	}
 
