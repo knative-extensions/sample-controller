@@ -1,5 +1,7 @@
+// +build nostackdriver
+
 /*
-Copyright 2020 The Knative Authors
+Copyright 2019 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,10 +16,20 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package handlers
+package metrics
 
-import "knative.dev/pkg/network"
+import (
+	"context"
+	"errors"
 
-// Error sets up a handler suitable for use with the ErrorHandler field on
-// httputil's reverse proxy, which logs /proc/net/sockstat data.
-var Error = network.ErrorHandler
+	"go.opencensus.io/stats/view"
+	"go.uber.org/zap"
+)
+
+func sdinit(ctx context.Context, m map[string]string, mc *metricsConfig, ops ExporterOptions) error {
+	return errors.New("Stackdriver support is not included")
+}
+
+func newStackdriverExporter(config *metricsConfig, logger *zap.SugaredLogger) (view.Exporter, ResourceExporterFactory, error) {
+	return nil, nil, errors.New("Stackdriver support is not included")
+}
