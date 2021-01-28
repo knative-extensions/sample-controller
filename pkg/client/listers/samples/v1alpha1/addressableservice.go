@@ -26,8 +26,10 @@ import (
 )
 
 // AddressableServiceLister helps list AddressableServices.
+// All objects returned here must be treated as read-only.
 type AddressableServiceLister interface {
 	// List lists all AddressableServices in the indexer.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.AddressableService, err error)
 	// AddressableServices returns an object that can list and get AddressableServices.
 	AddressableServices(namespace string) AddressableServiceNamespaceLister
@@ -58,10 +60,13 @@ func (s *addressableServiceLister) AddressableServices(namespace string) Address
 }
 
 // AddressableServiceNamespaceLister helps list and get AddressableServices.
+// All objects returned here must be treated as read-only.
 type AddressableServiceNamespaceLister interface {
 	// List lists all AddressableServices in the indexer for a given namespace.
+	// Objects returned here must be treated as read-only.
 	List(selector labels.Selector) (ret []*v1alpha1.AddressableService, err error)
 	// Get retrieves the AddressableService from the indexer for a given namespace and name.
+	// Objects returned here must be treated as read-only.
 	Get(name string) (*v1alpha1.AddressableService, error)
 	AddressableServiceNamespaceListerExpansion
 }
