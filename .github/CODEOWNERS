@@ -1,0 +1,9 @@
+# Default owners are Serving WG leads and TOC
+* @knative-sandbox/technical-oversight-committee
+* @knative-sandbox/knative-release-leads
+# Last match takes precedence for reviews
+* @knative-sandbox/serving-writers
+
+# hack and test are owned by productivity
+/hack/* @knative-sandbox/productivity-wg-leads
+/test/* @knative-sandbox/productivity-wg-leads
