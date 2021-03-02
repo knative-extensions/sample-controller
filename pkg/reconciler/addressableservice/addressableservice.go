@@ -60,8 +60,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, o *samplesv1alpha1.Addre
 		return err
 	}
 
-	_, err := r.ServiceLister.Services(o.Namespace).Get(o.Spec.ServiceName)
-	if apierrs.IsNotFound(err) {
+	if _, err := r.ServiceLister.Services(o.Namespace).Get(o.Spec.ServiceName); apierrs.IsNotFound(err) {
 		logger.Info("Service does not yet exist:", o.Spec.ServiceName)
 		o.Status.MarkServiceUnavailable(o.Spec.ServiceName)
 		return nil
