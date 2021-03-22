@@ -45,11 +45,11 @@ type SimpleDeployment struct {
 
 var (
 	// Check that AddressableService can be validated and defaulted.
-	_ apis.Validatable   = (*AddressableService)(nil)
-	_ apis.Defaultable   = (*AddressableService)(nil)
-	_ kmeta.OwnerRefable = (*AddressableService)(nil)
+	_ apis.Validatable   = (*SimpleDeployment)(nil)
+	_ apis.Defaultable   = (*SimpleDeployment)(nil)
+	_ kmeta.OwnerRefable = (*SimpleDeployment)(nil)
 	// Check that the type conforms to the duck Knative Resource shape.
-	_ duckv1.KRShaped = (*AddressableService)(nil)
+	_ duckv1.KRShaped = (*SimpleDeployment)(nil)
 )
 
 // SimpleDeploymentSpec holds the desired state of the SimpleDeployment (from the client).

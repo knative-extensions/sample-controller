@@ -25,7 +25,7 @@ var simpleDeploymentCondSet = apis.NewLivingConditionSet()
 
 // GetGroupVersionKind implements kmeta.OwnerRefable
 func (*SimpleDeployment) GetGroupVersionKind() schema.GroupVersionKind {
-	return SchemeGroupVersion.WithKind("AddressableService")
+	return SchemeGroupVersion.WithKind("SimpleDeployment")
 }
 
 // GetConditionSet retrieves the condition set for this resource. Implements the KRShaped interface.
@@ -48,5 +48,5 @@ func (ds *SimpleDeploymentStatus) MarkPodsNotReady(n int32) {
 
 // MarkPodsReady makes the SimpleDeployment be ready.
 func (ds *SimpleDeploymentStatus) MarkPodsReady() {
-	condSet.Manage(ds).MarkTrue(SimpleDeploymentConditionReady)
+	simpleDeploymentCondSet.Manage(ds).MarkTrue(SimpleDeploymentConditionReady)
 }
