@@ -2,8 +2,6 @@
 
 approvers:
 - technical-oversight-committee
-- dprotaso
-- mattmoor
-- n3wscott
-- vaikas-google
-- vaikas
+- knative-release-leads
+- serving-writers
+- eventing-writers
