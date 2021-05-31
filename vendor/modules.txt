@@ -756,7 +756,7 @@ knative.dev/hack/schema/commands
 knative.dev/hack/schema/docs
 knative.dev/hack/schema/registry
 knative.dev/hack/schema/schema
-# knative.dev/pkg v0.0.0-20210526081028-980a33719a10
+# knative.dev/pkg v0.0.0-20210528203030-47dfdcfaedfd
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
@@ -775,6 +775,7 @@ knative.dev/pkg/codegen/cmd/injection-gen/generators
 knative.dev/pkg/configmap
 knative.dev/pkg/configmap/informer
 knative.dev/pkg/controller
+knative.dev/pkg/environment
 knative.dev/pkg/hack
 knative.dev/pkg/hash
 knative.dev/pkg/injection
