@@ -3,7 +3,6 @@ module knative.dev/sample-controller
 go 1.15
 
 require (
-	github.com/aws/aws-sdk-go v1.31.12 // indirect
 	github.com/go-openapi/spec v0.19.6 // indirect
 	go.uber.org/zap v1.18.1
 	k8s.io/api v0.20.7
@@ -13,5 +12,5 @@ require (
 	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd
 	knative.dev/hack v0.0.0-20210622141627-e28525d8d260
 	knative.dev/hack/schema v0.0.0-20210622141627-e28525d8d260
-	knative.dev/pkg v0.0.0-20210713175550-7d1b0f19ef71
+	knative.dev/pkg v0.0.0-20210714200831-7764284cfa9a
 )
