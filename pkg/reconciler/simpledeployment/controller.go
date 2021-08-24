@@ -19,12 +19,13 @@ package simpledeployment
 import (
 	"context"
 
+	"k8s.io/client-go/tools/cache"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 
 	kubeclient "knative.dev/pkg/client/injection/kube/client"
 	podinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/pod"
+	"knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	simpledeploymentinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/simpledeployment"
 	simpledeploymentreconciler "knative.dev/sample-controller/pkg/client/injection/reconciler/samples/v1alpha1/simpledeployment"
 )
@@ -34,8 +35,6 @@ func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
-	logger := logging.FromContext(ctx)
-
 	// Obtain an informer to both the main and child resources. These will be started by
 	// the injection framework automatically. They'll keep a cached representation of the
 	// cluster's state of the respective resource at all times.
@@ -51,13 +50,14 @@ func NewController(
 	}
 	impl := simpledeploymentreconciler.NewImpl(ctx, r)
 
-	logger.Info("Setting up event handlers.")
-
 	// Listen for events on the main resource and enqueue themselves.
 	simpledeploymentInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
 	// Listen for events on the child resources and enqueue the owner of them.
-	podInformer.Informer().AddEventHandler(controller.HandleAll(impl.EnqueueControllerOf))
+	podInformer.Informer().AddEventHandler(cache.FilteringResourceEventHandler{
+		FilterFunc: controller.FilterController(&v1alpha1.SimpleDeployment{}),
+		Handler:    controller.HandleAll(impl.EnqueueControllerOf),
+	})
 
 	return impl
 }
