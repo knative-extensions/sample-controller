@@ -19,12 +19,9 @@ package addressableservice
 import (
 	"context"
 
-	"knative.dev/pkg/tracker"
-
 	corev1 "k8s.io/api/core/v1"
 	"knative.dev/pkg/configmap"
 	"knative.dev/pkg/controller"
-	"knative.dev/pkg/logging"
 
 	svcinformer "knative.dev/pkg/client/injection/kube/informers/core/v1/service"
 	addressableserviceinformer "knative.dev/sample-controller/pkg/client/injection/informers/samples/v1alpha1/addressableservice"
@@ -36,8 +33,6 @@ func NewController(
 	ctx context.Context,
 	cmw configmap.Watcher,
 ) *controller.Impl {
-	logger := logging.FromContext(ctx)
-
 	addressableserviceInformer := addressableserviceinformer.Get(ctx)
 	svcInformer := svcinformer.Get(ctx)
 
@@ -45,9 +40,7 @@ func NewController(
 		ServiceLister: svcInformer.Lister(),
 	}
 	impl := addressableservicereconciler.NewImpl(ctx, r)
-	r.Tracker = tracker.New(impl.EnqueueKey, controller.GetTrackerLease(ctx))
-
-	logger.Info("Setting up event handlers.")
+	r.Tracker = impl.Tracker
 
 	addressableserviceInformer.Informer().AddEventHandler(controller.HandleAll(impl.Enqueue))
 
