@@ -11,7 +11,7 @@ require (
 	k8s.io/client-go v0.21.4
 	k8s.io/code-generator v0.21.4
 	k8s.io/kube-openapi v0.0.0-20210305001622-591a79e4bda7
-	knative.dev/hack v0.0.0-20211018110626-47ac3b032e60
-	knative.dev/hack/schema v0.0.0-20211018110626-47ac3b032e60
-	knative.dev/pkg v0.0.0-20211018141937-a34efd6b409d
+	knative.dev/hack v0.0.0-20211019034732-ced8ce706528
+	knative.dev/hack/schema v0.0.0-20211019034732-ced8ce706528
+	knative.dev/pkg v0.0.0-20211019132235-ba2b2b1bf268
 )
