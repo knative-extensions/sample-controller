@@ -3,14 +3,7 @@ module knative.dev/sample-controller
 go 1.15
 
 require (
-	github.com/go-openapi/jsonpointer v0.19.5 // indirect
-	github.com/go-openapi/jsonreference v0.19.5 // indirect
-	github.com/go-openapi/spec v0.19.6 // indirect
-	github.com/go-openapi/swag v0.19.15 // indirect
-	github.com/imdario/mergo v0.3.9 // indirect
-	github.com/mailru/easyjson v0.7.7 // indirect
 	go.uber.org/zap v1.19.1
-	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	k8s.io/api v0.21.4
 	k8s.io/apimachinery v0.21.4
 	k8s.io/client-go v0.21.4
