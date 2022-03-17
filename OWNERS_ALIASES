@@ -112,8 +112,13 @@ aliases:
   - devguyio
   - lionelvillard
   eventing-writers:
+  - aliok
   - devguyio
   - lionelvillard
+  - matzew
+  - odacremolbap
+  - pierDipi
+  - vaikas
   homebrew-kn-plugins-approvers:
   - dsimansk
   - maximilien
@@ -234,8 +239,12 @@ aliases:
   - chizhg
   productivity-writers:
   - cardil
+  - chaodaiG
   - chizhg
+  - coryrc
+  - kvmware
   - psschwei
+  - upodroid
   security-wg-leads:
   - evankanderson
   - julz
@@ -247,8 +256,6 @@ aliases:
   - dprotaso
   - julz
   - nak3
-  source-wg-leads:
-  - lionelvillard
   steering-committee:
   - csantanapr
   - itsmurugappan
