@@ -26,7 +26,7 @@ spec:
       served: true
       storage: true
       subresources:
-        status: { }
+        status: {}
       schema:
         openAPIV3Schema:
           type: object
@@ -52,16 +52,14 @@ spec:
                   description: Conditions the latest available observations of a resource's current state.
                   type: array
                   items:
-                    description: 'Condition defines a readiness condition for a Knative resource. See: https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties'
                     type: object
                     required:
-                      - status
                       - type
+                      - status
                     properties:
                       lastTransitionTime:
                         description: LastTransitionTime is the last time the condition transitioned from one status to another. We use VolatileTime in place of metav1.Time to exclude this from creating equality.Semantic differences (all other things held constant).
                         type: string
-                        format: date-time
                       message:
                         description: A human readable message indicating details about the transition.
                         type: string
@@ -96,9 +94,8 @@ spec:
     plural: simpledeployments
     singular: simpledeployment
     categories:
-    - all
-    - knative
+      - all
+      - knative
     shortNames:
-    - sdeploy
+      - sdeploy
   scope: Namespaced
-
