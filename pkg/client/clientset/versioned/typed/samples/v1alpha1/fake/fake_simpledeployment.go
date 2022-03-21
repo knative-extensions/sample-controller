@@ -117,7 +117,7 @@ func (c *FakeSimpleDeployments) UpdateStatus(ctx context.Context, simpleDeployme
 // Delete takes name of the simpleDeployment and deletes it. Returns an error if one occurs.
 func (c *FakeSimpleDeployments) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(simpledeploymentsResource, c.ns, name), &v1alpha1.SimpleDeployment{})
+		Invokes(testing.NewDeleteActionWithOptions(simpledeploymentsResource, c.ns, name, opts), &v1alpha1.SimpleDeployment{})
 
 	return err
 }

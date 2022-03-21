@@ -117,7 +117,7 @@ func (c *FakeAddressableServices) UpdateStatus(ctx context.Context, addressableS
 // Delete takes name of the addressableService and deletes it. Returns an error if one occurs.
 func (c *FakeAddressableServices) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewDeleteAction(addressableservicesResource, c.ns, name), &v1alpha1.AddressableService{})
+		Invokes(testing.NewDeleteActionWithOptions(addressableservicesResource, c.ns, name, opts), &v1alpha1.AddressableService{})
 
 	return err
 }
