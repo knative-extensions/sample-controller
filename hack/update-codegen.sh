@@ -23,6 +23,10 @@ source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
 # If we run with -mod=vendor here, then generate-groups.sh looks for vendor files in the wrong place.
 export GOFLAGS=-mod=
 
+function run_yq() {
+  run_go_tool github.com/mikefarah/yq/v4@v4.23.1 yq "$@"
+}
+
 echo "=== Update Codegen for ${MODULE_NAME}"
 
 group "Kubernetes Codegen"
@@ -43,6 +47,16 @@ ${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
   knative.dev/sample-controller/pkg/client knative.dev/sample-controller/pkg/apis \
   "samples:v1alpha1" \
   --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+
+group "Update CRD Schema"
+
+go run $(dirname $0)/../cmd/schema/ dump SimpleDeployment \
+  | run_yq eval-all --header-preprocess=false --inplace 'select(fileIndex == 0).spec.versions[0].schema.openAPIV3Schema = select(fileIndex == 1) | select(fileIndex == 0)' \
+  $(dirname $0)/../config/300-simpledeployment.yaml -
+
+go run $(dirname $0)/../cmd/schema/ dump AddressableService \
+  | run_yq eval-all --header-preprocess=false --inplace 'select(fileIndex == 0).spec.versions[0].schema.openAPIV3Schema = select(fileIndex == 1) | select(fileIndex == 0)' \
+  $(dirname $0)/../config/300-addressableservice.yaml -
 
 group "Update deps post-codegen"
 
