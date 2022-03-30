@@ -19,9 +19,7 @@ set -o nounset
 set -o pipefail
 
 source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
-
-# If we run with -mod=vendor here, then generate-groups.sh looks for vendor files in the wrong place.
-export GOFLAGS=-mod=
+export PATH="$GOBIN:$PATH"
 
 function run_yq() {
   run_go_tool github.com/mikefarah/yq/v4@v4.23.1 yq "$@"
