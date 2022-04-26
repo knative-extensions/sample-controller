@@ -727,7 +727,7 @@ knative.dev/hack/schema/commands
 knative.dev/hack/schema/docs
 knative.dev/hack/schema/registry
 knative.dev/hack/schema/schema
-# knative.dev/pkg v0.0.0-20220412134708-e325df66cb51
+# knative.dev/pkg v0.0.0-20220425215754-45c37c266b74
 ## explicit
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
