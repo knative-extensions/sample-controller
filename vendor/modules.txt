@@ -245,6 +245,12 @@ golang.org/x/sys/windows
 golang.org/x/term
 # golang.org/x/text v0.3.7
 ## explicit; go 1.17
+golang.org/x/text/cases
+golang.org/x/text/internal
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/language
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
@@ -791,16 +797,16 @@ k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/hack v0.0.0-20220721014222-a6450400b5f1
-## explicit; go 1.14
+# knative.dev/hack v0.0.0-20220722185521-123a2783c4d8
+## explicit; go 1.17
 knative.dev/hack
-# knative.dev/hack/schema v0.0.0-20220721014222-a6450400b5f1
+# knative.dev/hack/schema v0.0.0-20220722185521-123a2783c4d8
 ## explicit; go 1.15
 knative.dev/hack/schema/commands
 knative.dev/hack/schema/docs
 knative.dev/hack/schema/registry
 knative.dev/hack/schema/schema
-# knative.dev/pkg v0.0.0-20220721014205-1a5e1682be3a
+# knative.dev/pkg v0.0.0-20220722175921-6c9c1c6098d5
 ## explicit; go 1.18
 knative.dev/pkg/apis
 knative.dev/pkg/apis/duck
