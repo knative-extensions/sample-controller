@@ -799,10 +799,10 @@ k8s.io/utils/internal/third_party/forked/golang/net
 k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# knative.dev/hack v0.0.0-20220902220419-664eac5c391e
+# knative.dev/hack v0.0.0-20220907111718-6c301965af4c
 ## explicit; go 1.18
 knative.dev/hack
-# knative.dev/hack/schema v0.0.0-20220902220419-664eac5c391e
+# knative.dev/hack/schema v0.0.0-20220907111718-6c301965af4c
 ## explicit; go 1.18
 knative.dev/hack/schema/commands
 knative.dev/hack/schema/docs
