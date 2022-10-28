@@ -12,7 +12,7 @@ require (
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1
 	knative.dev/hack v0.0.0-20221024013916-9d2ae47c16b2
 	knative.dev/hack/schema v0.0.0-20221024013916-9d2ae47c16b2
-	knative.dev/pkg v0.0.0-20221025200856-6ce976ce9255
+	knative.dev/pkg v0.0.0-20221027173407-198b4637065d
 )
 
 require (
