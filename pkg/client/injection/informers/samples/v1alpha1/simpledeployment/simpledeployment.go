@@ -21,23 +21,15 @@ package simpledeployment
 import (
 	context "context"
 
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	cache "k8s.io/client-go/tools/cache"
 	controller "knative.dev/pkg/controller"
 	injection "knative.dev/pkg/injection"
 	logging "knative.dev/pkg/logging"
-	apissamplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
-	versioned "knative.dev/sample-controller/pkg/client/clientset/versioned"
 	v1alpha1 "knative.dev/sample-controller/pkg/client/informers/externalversions/samples/v1alpha1"
-	client "knative.dev/sample-controller/pkg/client/injection/client"
 	factory "knative.dev/sample-controller/pkg/client/injection/informers/factory"
-	samplesv1alpha1 "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
 )
 
 func init() {
 	injection.Default.RegisterInformer(withInformer)
-	injection.Dynamic.RegisterDynamicInformer(withDynamicInformer)
 }
 
 // Key is used for associating the Informer inside the context.Context.
@@ -49,11 +41,6 @@ func withInformer(ctx context.Context) (context.Context, controller.Informer) {
 	return context.WithValue(ctx, Key{}, inf), inf.Informer()
 }
 
-func withDynamicInformer(ctx context.Context) context.Context {
-	inf := &wrapper{client: client.Get(ctx), resourceVersion: injection.GetResourceVersion(ctx)}
-	return context.WithValue(ctx, Key{}, inf)
-}
-
 // Get extracts the typed informer from the context.
 func Get(ctx context.Context) v1alpha1.SimpleDeploymentInformer {
 	untyped := ctx.Value(Key{})
@@ -62,55 +49,4 @@ func Get(ctx context.Context) v1alpha1.SimpleDeploymentInformer {
 			"Unable to fetch knative.dev/sample-controller/pkg/client/informers/externalversions/samples/v1alpha1.SimpleDeploymentInformer from context.")
 	}
 	return untyped.(v1alpha1.SimpleDeploymentInformer)
-}
-
-type wrapper struct {
-	client versioned.Interface
-
-	namespace string
-
-	resourceVersion string
-}
-
-var _ v1alpha1.SimpleDeploymentInformer = (*wrapper)(nil)
-var _ samplesv1alpha1.SimpleDeploymentLister = (*wrapper)(nil)
-
-func (w *wrapper) Informer() cache.SharedIndexInformer {
-	return cache.NewSharedIndexInformer(nil, &apissamplesv1alpha1.SimpleDeployment{}, 0, nil)
-}
-
-func (w *wrapper) Lister() samplesv1alpha1.SimpleDeploymentLister {
-	return w
-}
-
-func (w *wrapper) SimpleDeployments(namespace string) samplesv1alpha1.SimpleDeploymentNamespaceLister {
-	return &wrapper{client: w.client, namespace: namespace, resourceVersion: w.resourceVersion}
-}
-
-// SetResourceVersion allows consumers to adjust the minimum resourceVersion
-// used by the underlying client.  It is not accessible via the standard
-// lister interface, but can be accessed through a user-defined interface and
-// an implementation check e.g. rvs, ok := foo.(ResourceVersionSetter)
-func (w *wrapper) SetResourceVersion(resourceVersion string) {
-	w.resourceVersion = resourceVersion
-}
-
-func (w *wrapper) List(selector labels.Selector) (ret []*apissamplesv1alpha1.SimpleDeployment, err error) {
-	lo, err := w.client.SamplesV1alpha1().SimpleDeployments(w.namespace).List(context.TODO(), v1.ListOptions{
-		LabelSelector:   selector.String(),
-		ResourceVersion: w.resourceVersion,
-	})
-	if err != nil {
-		return nil, err
-	}
-	for idx := range lo.Items {
-		ret = append(ret, &lo.Items[idx])
-	}
-	return ret, nil
-}
-
-func (w *wrapper) Get(name string) (*apissamplesv1alpha1.SimpleDeployment, error) {
-	return w.client.SamplesV1alpha1().SimpleDeployments(w.namespace).Get(context.TODO(), name, v1.GetOptions{
-		ResourceVersion: w.resourceVersion,
-	})
 }
