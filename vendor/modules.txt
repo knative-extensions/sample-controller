@@ -816,10 +816,10 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/strings/slices
 k8s.io/utils/trace
-# knative.dev/hack v0.0.0-20230802014852-338500eed425
+# knative.dev/hack v0.0.0-20230803220206-d7fde305c59f
 ## explicit; go 1.18
 knative.dev/hack
-# knative.dev/hack/schema v0.0.0-20230802014852-338500eed425
+# knative.dev/hack/schema v0.0.0-20230803220206-d7fde305c59f
 ## explicit; go 1.18
 knative.dev/hack/schema/commands
 knative.dev/hack/schema/docs
