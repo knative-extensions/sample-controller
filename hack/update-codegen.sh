@@ -22,7 +22,7 @@ source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
 export PATH="$GOBIN:$PATH"
 
 function run_yq() {
-  run_go_tool github.com/mikefarah/yq/v4@v4.23.1 yq "$@"
+	go_run github.com/mikefarah/yq/v4@v4.23.1 "$@"
 }
 
 echo "=== Update Codegen for ${MODULE_NAME}"
