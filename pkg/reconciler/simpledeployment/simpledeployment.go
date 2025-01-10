@@ -75,13 +75,13 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, d *samplesv1alpha1.Simpl
 		}
 	}
 
-	currentCount := int32(len(currentPods))
+	currentCount := int32(len(currentPods)) //nolint // ignore overflow int -> int32
 	if currentCount < d.Spec.Replicas {
 		// We don't have as many replicas as we should, so create the remaining ones.
 		toCreate := d.Spec.Replicas - currentCount
 		logger.Infof("Got %d existing pods, want %d -> creating %d", currentCount, d.Spec.Replicas, toCreate)
 		pod := makePod(d)
-		for i := int32(0); i < toCreate; i++ {
+		for range toCreate {
 			if _, err := r.kubeclient.CoreV1().Pods(pod.Namespace).Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 				return fmt.Errorf("failed to create pod: %w", err)
 			}
@@ -90,7 +90,7 @@ func (r *Reconciler) ReconcileKind(ctx context.Context, d *samplesv1alpha1.Simpl
 		// We have too many replicas, so remove the ones that are too much.
 		toDelete := currentCount - d.Spec.Replicas
 		logger.Infof("Got %d existing pods, want %d -> removing %d", currentCount, d.Spec.Replicas, toDelete)
-		for i := int32(0); i < toDelete; i++ {
+		for i := range toDelete {
 			if err := r.kubeclient.CoreV1().Pods(d.Namespace).Delete(ctx, currentPods[i].Name, metav1.DeleteOptions{}); err != nil {
 				return fmt.Errorf("failed to delete pod: %w", err)
 			}
