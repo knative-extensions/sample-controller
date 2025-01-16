@@ -20,12 +20,11 @@ package v1alpha1
 
 import (
 	"context"
-	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 	v1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	scheme "knative.dev/sample-controller/pkg/client/clientset/versioned/scheme"
 )
@@ -40,6 +39,7 @@ type SimpleDeploymentsGetter interface {
 type SimpleDeploymentInterface interface {
 	Create(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.CreateOptions) (*v1alpha1.SimpleDeployment, error)
 	Update(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.UpdateOptions) (*v1alpha1.SimpleDeployment, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
 	UpdateStatus(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.UpdateOptions) (*v1alpha1.SimpleDeployment, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
@@ -52,144 +52,18 @@ type SimpleDeploymentInterface interface {
 
 // simpleDeployments implements SimpleDeploymentInterface
 type simpleDeployments struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithList[*v1alpha1.SimpleDeployment, *v1alpha1.SimpleDeploymentList]
 }
 
 // newSimpleDeployments returns a SimpleDeployments
 func newSimpleDeployments(c *SamplesV1alpha1Client, namespace string) *simpleDeployments {
 	return &simpleDeployments{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithList[*v1alpha1.SimpleDeployment, *v1alpha1.SimpleDeploymentList](
+			"simpledeployments",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *v1alpha1.SimpleDeployment { return &v1alpha1.SimpleDeployment{} },
+			func() *v1alpha1.SimpleDeploymentList { return &v1alpha1.SimpleDeploymentList{} }),
 	}
-}
-
-// Get takes name of the simpleDeployment, and returns the corresponding simpleDeployment object, and an error if there is any.
-func (c *simpleDeployments) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.SimpleDeployment, err error) {
-	result = &v1alpha1.SimpleDeployment{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("simpledeployments").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of SimpleDeployments that match those selectors.
-func (c *simpleDeployments) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.SimpleDeploymentList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.SimpleDeploymentList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("simpledeployments").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested simpleDeployments.
-func (c *simpleDeployments) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("simpledeployments").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a simpleDeployment and creates it.  Returns the server's representation of the simpleDeployment, and an error, if there is any.
-func (c *simpleDeployments) Create(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.CreateOptions) (result *v1alpha1.SimpleDeployment, err error) {
-	result = &v1alpha1.SimpleDeployment{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("simpledeployments").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(simpleDeployment).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a simpleDeployment and updates it. Returns the server's representation of the simpleDeployment, and an error, if there is any.
-func (c *simpleDeployments) Update(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.UpdateOptions) (result *v1alpha1.SimpleDeployment, err error) {
-	result = &v1alpha1.SimpleDeployment{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("simpledeployments").
-		Name(simpleDeployment.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(simpleDeployment).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *simpleDeployments) UpdateStatus(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.UpdateOptions) (result *v1alpha1.SimpleDeployment, err error) {
-	result = &v1alpha1.SimpleDeployment{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("simpledeployments").
-		Name(simpleDeployment.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(simpleDeployment).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the simpleDeployment and deletes it. Returns an error if one occurs.
-func (c *simpleDeployments) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("simpledeployments").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *simpleDeployments) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("simpledeployments").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched simpleDeployment.
-func (c *simpleDeployments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.SimpleDeployment, err error) {
-	result = &v1alpha1.SimpleDeployment{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("simpledeployments").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }
