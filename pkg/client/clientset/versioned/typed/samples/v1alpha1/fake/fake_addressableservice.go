@@ -41,22 +41,24 @@ var addressableservicesKind = v1alpha1.SchemeGroupVersion.WithKind("AddressableS
 
 // Get takes name of the addressableService, and returns the corresponding addressableService object, and an error if there is any.
 func (c *FakeAddressableServices) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.AddressableService, err error) {
+	emptyResult := &v1alpha1.AddressableService{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(addressableservicesResource, c.ns, name), &v1alpha1.AddressableService{})
+		Invokes(testing.NewGetActionWithOptions(addressableservicesResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddressableService), err
 }
 
 // List takes label and field selectors, and returns the list of AddressableServices that match those selectors.
 func (c *FakeAddressableServices) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.AddressableServiceList, err error) {
+	emptyResult := &v1alpha1.AddressableServiceList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(addressableservicesResource, addressableservicesKind, c.ns, opts), &v1alpha1.AddressableServiceList{})
+		Invokes(testing.NewListActionWithOptions(addressableservicesResource, addressableservicesKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -75,40 +77,43 @@ func (c *FakeAddressableServices) List(ctx context.Context, opts v1.ListOptions)
 // Watch returns a watch.Interface that watches the requested addressableServices.
 func (c *FakeAddressableServices) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(addressableservicesResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(addressableservicesResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a addressableService and creates it.  Returns the server's representation of the addressableService, and an error, if there is any.
 func (c *FakeAddressableServices) Create(ctx context.Context, addressableService *v1alpha1.AddressableService, opts v1.CreateOptions) (result *v1alpha1.AddressableService, err error) {
+	emptyResult := &v1alpha1.AddressableService{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(addressableservicesResource, c.ns, addressableService), &v1alpha1.AddressableService{})
+		Invokes(testing.NewCreateActionWithOptions(addressableservicesResource, c.ns, addressableService, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddressableService), err
 }
 
 // Update takes the representation of a addressableService and updates it. Returns the server's representation of the addressableService, and an error, if there is any.
 func (c *FakeAddressableServices) Update(ctx context.Context, addressableService *v1alpha1.AddressableService, opts v1.UpdateOptions) (result *v1alpha1.AddressableService, err error) {
+	emptyResult := &v1alpha1.AddressableService{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(addressableservicesResource, c.ns, addressableService), &v1alpha1.AddressableService{})
+		Invokes(testing.NewUpdateActionWithOptions(addressableservicesResource, c.ns, addressableService, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddressableService), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeAddressableServices) UpdateStatus(ctx context.Context, addressableService *v1alpha1.AddressableService, opts v1.UpdateOptions) (*v1alpha1.AddressableService, error) {
+func (c *FakeAddressableServices) UpdateStatus(ctx context.Context, addressableService *v1alpha1.AddressableService, opts v1.UpdateOptions) (result *v1alpha1.AddressableService, err error) {
+	emptyResult := &v1alpha1.AddressableService{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(addressableservicesResource, "status", c.ns, addressableService), &v1alpha1.AddressableService{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(addressableservicesResource, "status", c.ns, addressableService, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddressableService), err
 }
@@ -123,7 +128,7 @@ func (c *FakeAddressableServices) Delete(ctx context.Context, name string, opts 
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeAddressableServices) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(addressableservicesResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(addressableservicesResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.AddressableServiceList{})
 	return err
@@ -131,11 +136,12 @@ func (c *FakeAddressableServices) DeleteCollection(ctx context.Context, opts v1.
 
 // Patch applies the patch and returns the patched addressableService.
 func (c *FakeAddressableServices) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AddressableService, err error) {
+	emptyResult := &v1alpha1.AddressableService{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(addressableservicesResource, c.ns, name, pt, data, subresources...), &v1alpha1.AddressableService{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(addressableservicesResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.AddressableService), err
 }

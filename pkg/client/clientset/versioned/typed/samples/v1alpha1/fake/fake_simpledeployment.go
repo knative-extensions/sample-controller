@@ -41,22 +41,24 @@ var simpledeploymentsKind = v1alpha1.SchemeGroupVersion.WithKind("SimpleDeployme
 
 // Get takes name of the simpleDeployment, and returns the corresponding simpleDeployment object, and an error if there is any.
 func (c *FakeSimpleDeployments) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.SimpleDeployment, err error) {
+	emptyResult := &v1alpha1.SimpleDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(simpledeploymentsResource, c.ns, name), &v1alpha1.SimpleDeployment{})
+		Invokes(testing.NewGetActionWithOptions(simpledeploymentsResource, c.ns, name, options), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.SimpleDeployment), err
 }
 
 // List takes label and field selectors, and returns the list of SimpleDeployments that match those selectors.
 func (c *FakeSimpleDeployments) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.SimpleDeploymentList, err error) {
+	emptyResult := &v1alpha1.SimpleDeploymentList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewListAction(simpledeploymentsResource, simpledeploymentsKind, c.ns, opts), &v1alpha1.SimpleDeploymentList{})
+		Invokes(testing.NewListActionWithOptions(simpledeploymentsResource, simpledeploymentsKind, c.ns, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
@@ -75,40 +77,43 @@ func (c *FakeSimpleDeployments) List(ctx context.Context, opts v1.ListOptions) (
 // Watch returns a watch.Interface that watches the requested simpleDeployments.
 func (c *FakeSimpleDeployments) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(simpledeploymentsResource, c.ns, opts))
+		InvokesWatch(testing.NewWatchActionWithOptions(simpledeploymentsResource, c.ns, opts))
 
 }
 
 // Create takes the representation of a simpleDeployment and creates it.  Returns the server's representation of the simpleDeployment, and an error, if there is any.
 func (c *FakeSimpleDeployments) Create(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.CreateOptions) (result *v1alpha1.SimpleDeployment, err error) {
+	emptyResult := &v1alpha1.SimpleDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(simpledeploymentsResource, c.ns, simpleDeployment), &v1alpha1.SimpleDeployment{})
+		Invokes(testing.NewCreateActionWithOptions(simpledeploymentsResource, c.ns, simpleDeployment, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.SimpleDeployment), err
 }
 
 // Update takes the representation of a simpleDeployment and updates it. Returns the server's representation of the simpleDeployment, and an error, if there is any.
 func (c *FakeSimpleDeployments) Update(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.UpdateOptions) (result *v1alpha1.SimpleDeployment, err error) {
+	emptyResult := &v1alpha1.SimpleDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(simpledeploymentsResource, c.ns, simpleDeployment), &v1alpha1.SimpleDeployment{})
+		Invokes(testing.NewUpdateActionWithOptions(simpledeploymentsResource, c.ns, simpleDeployment, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.SimpleDeployment), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeSimpleDeployments) UpdateStatus(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.UpdateOptions) (*v1alpha1.SimpleDeployment, error) {
+func (c *FakeSimpleDeployments) UpdateStatus(ctx context.Context, simpleDeployment *v1alpha1.SimpleDeployment, opts v1.UpdateOptions) (result *v1alpha1.SimpleDeployment, err error) {
+	emptyResult := &v1alpha1.SimpleDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(simpledeploymentsResource, "status", c.ns, simpleDeployment), &v1alpha1.SimpleDeployment{})
+		Invokes(testing.NewUpdateSubresourceActionWithOptions(simpledeploymentsResource, "status", c.ns, simpleDeployment, opts), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.SimpleDeployment), err
 }
@@ -123,7 +128,7 @@ func (c *FakeSimpleDeployments) Delete(ctx context.Context, name string, opts v1
 
 // DeleteCollection deletes a collection of objects.
 func (c *FakeSimpleDeployments) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(simpledeploymentsResource, c.ns, listOpts)
+	action := testing.NewDeleteCollectionActionWithOptions(simpledeploymentsResource, c.ns, opts, listOpts)
 
 	_, err := c.Fake.Invokes(action, &v1alpha1.SimpleDeploymentList{})
 	return err
@@ -131,11 +136,12 @@ func (c *FakeSimpleDeployments) DeleteCollection(ctx context.Context, opts v1.De
 
 // Patch applies the patch and returns the patched simpleDeployment.
 func (c *FakeSimpleDeployments) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.SimpleDeployment, err error) {
+	emptyResult := &v1alpha1.SimpleDeployment{}
 	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(simpledeploymentsResource, c.ns, name, pt, data, subresources...), &v1alpha1.SimpleDeployment{})
+		Invokes(testing.NewPatchSubresourceActionWithOptions(simpledeploymentsResource, c.ns, name, pt, data, opts, subresources...), emptyResult)
 
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 	return obj.(*v1alpha1.SimpleDeployment), err
 }

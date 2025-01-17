@@ -19,8 +19,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 	v1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
@@ -38,25 +38,17 @@ type SimpleDeploymentLister interface {
 
 // simpleDeploymentLister implements the SimpleDeploymentLister interface.
 type simpleDeploymentLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1alpha1.SimpleDeployment]
 }
 
 // NewSimpleDeploymentLister returns a new SimpleDeploymentLister.
 func NewSimpleDeploymentLister(indexer cache.Indexer) SimpleDeploymentLister {
-	return &simpleDeploymentLister{indexer: indexer}
-}
-
-// List lists all SimpleDeployments in the indexer.
-func (s *simpleDeploymentLister) List(selector labels.Selector) (ret []*v1alpha1.SimpleDeployment, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.SimpleDeployment))
-	})
-	return ret, err
+	return &simpleDeploymentLister{listers.New[*v1alpha1.SimpleDeployment](indexer, v1alpha1.Resource("simpledeployment"))}
 }
 
 // SimpleDeployments returns an object that can list and get SimpleDeployments.
 func (s *simpleDeploymentLister) SimpleDeployments(namespace string) SimpleDeploymentNamespaceLister {
-	return simpleDeploymentNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return simpleDeploymentNamespaceLister{listers.NewNamespaced[*v1alpha1.SimpleDeployment](s.ResourceIndexer, namespace)}
 }
 
 // SimpleDeploymentNamespaceLister helps list and get SimpleDeployments.
@@ -74,26 +66,5 @@ type SimpleDeploymentNamespaceLister interface {
 // simpleDeploymentNamespaceLister implements the SimpleDeploymentNamespaceLister
 // interface.
 type simpleDeploymentNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all SimpleDeployments in the indexer for a given namespace.
-func (s simpleDeploymentNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.SimpleDeployment, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.SimpleDeployment))
-	})
-	return ret, err
-}
-
-// Get retrieves the SimpleDeployment from the indexer for a given namespace and name.
-func (s simpleDeploymentNamespaceLister) Get(name string) (*v1alpha1.SimpleDeployment, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("simpledeployment"), name)
-	}
-	return obj.(*v1alpha1.SimpleDeployment), nil
+	listers.ResourceIndexer[*v1alpha1.SimpleDeployment]
 }
