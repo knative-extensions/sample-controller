@@ -11,7 +11,7 @@ require (
 	k8s.io/kube-openapi v0.0.0-20240808142205-8e686545bdb8
 	knative.dev/hack v0.0.0-20250116150306-c142b4835bc5
 	knative.dev/hack/schema v0.0.0-20250116150306-c142b4835bc5
-	knative.dev/pkg v0.0.0-20250113161000-0c2a238a16ed
+	knative.dev/pkg v0.0.0-20250117084104-c43477f0052b
 )
 
 require (
