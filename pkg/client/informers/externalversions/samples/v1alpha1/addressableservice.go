@@ -19,24 +19,24 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	samplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	apissamplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	versioned "knative.dev/sample-controller/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/sample-controller/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
+	samplesv1alpha1 "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
 )
 
 // AddressableServiceInformer provides access to a shared informer and lister for
 // AddressableServices.
 type AddressableServiceInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.AddressableServiceLister
+	Lister() samplesv1alpha1.AddressableServiceLister
 }
 
 type addressableServiceInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredAddressableServiceInformer(client versioned.Interface, namespace
 				return client.SamplesV1alpha1().AddressableServices(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&samplesv1alpha1.AddressableService{},
+		&apissamplesv1alpha1.AddressableService{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *addressableServiceInformer) defaultInformer(client versioned.Interface,
 }
 
 func (f *addressableServiceInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&samplesv1alpha1.AddressableService{}, f.defaultInformer)
+	return f.factory.InformerFor(&apissamplesv1alpha1.AddressableService{}, f.defaultInformer)
 }
 
-func (f *addressableServiceInformer) Lister() v1alpha1.AddressableServiceLister {
-	return v1alpha1.NewAddressableServiceLister(f.Informer().GetIndexer())
+func (f *addressableServiceInformer) Lister() samplesv1alpha1.AddressableServiceLister {
+	return samplesv1alpha1.NewAddressableServiceLister(f.Informer().GetIndexer())
 }

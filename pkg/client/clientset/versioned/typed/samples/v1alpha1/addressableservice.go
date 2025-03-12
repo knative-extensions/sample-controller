@@ -19,13 +19,13 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	gentype "k8s.io/client-go/gentype"
-	v1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	samplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	scheme "knative.dev/sample-controller/pkg/client/clientset/versioned/scheme"
 )
 
@@ -37,33 +37,34 @@ type AddressableServicesGetter interface {
 
 // AddressableServiceInterface has methods to work with AddressableService resources.
 type AddressableServiceInterface interface {
-	Create(ctx context.Context, addressableService *v1alpha1.AddressableService, opts v1.CreateOptions) (*v1alpha1.AddressableService, error)
-	Update(ctx context.Context, addressableService *v1alpha1.AddressableService, opts v1.UpdateOptions) (*v1alpha1.AddressableService, error)
+	Create(ctx context.Context, addressableService *samplesv1alpha1.AddressableService, opts v1.CreateOptions) (*samplesv1alpha1.AddressableService, error)
+	Update(ctx context.Context, addressableService *samplesv1alpha1.AddressableService, opts v1.UpdateOptions) (*samplesv1alpha1.AddressableService, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, addressableService *v1alpha1.AddressableService, opts v1.UpdateOptions) (*v1alpha1.AddressableService, error)
+	UpdateStatus(ctx context.Context, addressableService *samplesv1alpha1.AddressableService, opts v1.UpdateOptions) (*samplesv1alpha1.AddressableService, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.AddressableService, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.AddressableServiceList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*samplesv1alpha1.AddressableService, error)
+	List(ctx context.Context, opts v1.ListOptions) (*samplesv1alpha1.AddressableServiceList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.AddressableService, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *samplesv1alpha1.AddressableService, err error)
 	AddressableServiceExpansion
 }
 
 // addressableServices implements AddressableServiceInterface
 type addressableServices struct {
-	*gentype.ClientWithList[*v1alpha1.AddressableService, *v1alpha1.AddressableServiceList]
+	*gentype.ClientWithList[*samplesv1alpha1.AddressableService, *samplesv1alpha1.AddressableServiceList]
 }
 
 // newAddressableServices returns a AddressableServices
 func newAddressableServices(c *SamplesV1alpha1Client, namespace string) *addressableServices {
 	return &addressableServices{
-		gentype.NewClientWithList[*v1alpha1.AddressableService, *v1alpha1.AddressableServiceList](
+		gentype.NewClientWithList[*samplesv1alpha1.AddressableService, *samplesv1alpha1.AddressableServiceList](
 			"addressableservices",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			namespace,
-			func() *v1alpha1.AddressableService { return &v1alpha1.AddressableService{} },
-			func() *v1alpha1.AddressableServiceList { return &v1alpha1.AddressableServiceList{} }),
+			func() *samplesv1alpha1.AddressableService { return &samplesv1alpha1.AddressableService{} },
+			func() *samplesv1alpha1.AddressableServiceList { return &samplesv1alpha1.AddressableServiceList{} },
+		),
 	}
 }
