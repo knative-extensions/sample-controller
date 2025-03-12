@@ -19,10 +19,10 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/listers"
-	"k8s.io/client-go/tools/cache"
-	v1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
+	samplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 )
 
 // AddressableServiceLister helps list AddressableServices.
@@ -30,7 +30,7 @@ import (
 type AddressableServiceLister interface {
 	// List lists all AddressableServices in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.AddressableService, err error)
+	List(selector labels.Selector) (ret []*samplesv1alpha1.AddressableService, err error)
 	// AddressableServices returns an object that can list and get AddressableServices.
 	AddressableServices(namespace string) AddressableServiceNamespaceLister
 	AddressableServiceListerExpansion
@@ -38,17 +38,17 @@ type AddressableServiceLister interface {
 
 // addressableServiceLister implements the AddressableServiceLister interface.
 type addressableServiceLister struct {
-	listers.ResourceIndexer[*v1alpha1.AddressableService]
+	listers.ResourceIndexer[*samplesv1alpha1.AddressableService]
 }
 
 // NewAddressableServiceLister returns a new AddressableServiceLister.
 func NewAddressableServiceLister(indexer cache.Indexer) AddressableServiceLister {
-	return &addressableServiceLister{listers.New[*v1alpha1.AddressableService](indexer, v1alpha1.Resource("addressableservice"))}
+	return &addressableServiceLister{listers.New[*samplesv1alpha1.AddressableService](indexer, samplesv1alpha1.Resource("addressableservice"))}
 }
 
 // AddressableServices returns an object that can list and get AddressableServices.
 func (s *addressableServiceLister) AddressableServices(namespace string) AddressableServiceNamespaceLister {
-	return addressableServiceNamespaceLister{listers.NewNamespaced[*v1alpha1.AddressableService](s.ResourceIndexer, namespace)}
+	return addressableServiceNamespaceLister{listers.NewNamespaced[*samplesv1alpha1.AddressableService](s.ResourceIndexer, namespace)}
 }
 
 // AddressableServiceNamespaceLister helps list and get AddressableServices.
@@ -56,15 +56,15 @@ func (s *addressableServiceLister) AddressableServices(namespace string) Address
 type AddressableServiceNamespaceLister interface {
 	// List lists all AddressableServices in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.AddressableService, err error)
+	List(selector labels.Selector) (ret []*samplesv1alpha1.AddressableService, err error)
 	// Get retrieves the AddressableService from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.AddressableService, error)
+	Get(name string) (*samplesv1alpha1.AddressableService, error)
 	AddressableServiceNamespaceListerExpansion
 }
 
 // addressableServiceNamespaceLister implements the AddressableServiceNamespaceLister
 // interface.
 type addressableServiceNamespaceLister struct {
-	listers.ResourceIndexer[*v1alpha1.AddressableService]
+	listers.ResourceIndexer[*samplesv1alpha1.AddressableService]
 }
