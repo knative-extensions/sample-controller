@@ -15,7 +15,8 @@
 # limitations under the License.
 
 
-source $(dirname $0)/../vendor/knative.dev/hack/release.sh
+# shellcheck disable=SC1090
+source "$(go run knative.dev/hack/cmd/script release.sh)"
 
 declare -A COMPONENTS
 COMPONENTS=(
@@ -43,4 +44,4 @@ function build_release() {
   ARTIFACTS_TO_PUBLISH="${all_yamls[@]}"
 }
 
-main $@
+main "$@"
