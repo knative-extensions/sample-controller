@@ -10,7 +10,6 @@ require (
 	k8s.io/code-generator v0.31.4
 	k8s.io/kube-openapi v0.0.0-20240808142205-8e686545bdb8
 	knative.dev/hack v0.0.0-20250128013659-5f7f0f50e9de
-	knative.dev/hack/schema v0.0.0-20250128013659-5f7f0f50e9de
 	knative.dev/pkg v0.0.0-20250203163623-f62a97fc6ad4
 )
 
@@ -43,7 +42,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.21.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
-	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
@@ -57,7 +55,6 @@ require (
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/prometheus/statsd_exporter v0.22.7 // indirect
-	github.com/spf13/cobra v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opencensus.io v0.24.0 // indirect
