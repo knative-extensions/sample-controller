@@ -19,24 +19,24 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
 	cache "k8s.io/client-go/tools/cache"
-	samplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
+	apissamplesv1alpha1 "knative.dev/sample-controller/pkg/apis/samples/v1alpha1"
 	versioned "knative.dev/sample-controller/pkg/client/clientset/versioned"
 	internalinterfaces "knative.dev/sample-controller/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
+	samplesv1alpha1 "knative.dev/sample-controller/pkg/client/listers/samples/v1alpha1"
 )
 
 // SimpleDeploymentInformer provides access to a shared informer and lister for
 // SimpleDeployments.
 type SimpleDeploymentInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.SimpleDeploymentLister
+	Lister() samplesv1alpha1.SimpleDeploymentLister
 }
 
 type simpleDeploymentInformer struct {
@@ -71,7 +71,7 @@ func NewFilteredSimpleDeploymentInformer(client versioned.Interface, namespace s
 				return client.SamplesV1alpha1().SimpleDeployments(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&samplesv1alpha1.SimpleDeployment{},
+		&apissamplesv1alpha1.SimpleDeployment{},
 		resyncPeriod,
 		indexers,
 	)
@@ -82,9 +82,9 @@ func (f *simpleDeploymentInformer) defaultInformer(client versioned.Interface, r
 }
 
 func (f *simpleDeploymentInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&samplesv1alpha1.SimpleDeployment{}, f.defaultInformer)
+	return f.factory.InformerFor(&apissamplesv1alpha1.SimpleDeployment{}, f.defaultInformer)
 }
 
-func (f *simpleDeploymentInformer) Lister() v1alpha1.SimpleDeploymentLister {
-	return v1alpha1.NewSimpleDeploymentLister(f.Informer().GetIndexer())
+func (f *simpleDeploymentInformer) Lister() samplesv1alpha1.SimpleDeploymentLister {
+	return samplesv1alpha1.NewSimpleDeploymentLister(f.Informer().GetIndexer())
 }

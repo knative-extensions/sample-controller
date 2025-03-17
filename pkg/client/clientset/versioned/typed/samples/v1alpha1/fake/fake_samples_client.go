@@ -29,11 +29,11 @@ type FakeSamplesV1alpha1 struct {
 }
 
 func (c *FakeSamplesV1alpha1) AddressableServices(namespace string) v1alpha1.AddressableServiceInterface {
-	return &FakeAddressableServices{c, namespace}
+	return newFakeAddressableServices(c, namespace)
 }
 
 func (c *FakeSamplesV1alpha1) SimpleDeployments(namespace string) v1alpha1.SimpleDeploymentInterface {
-	return &FakeSimpleDeployments{c, namespace}
+	return newFakeSimpleDeployments(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate
