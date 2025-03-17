@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The Knative Authors
+Copyright 2025 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,11 +29,11 @@ type FakeSamplesV1alpha1 struct {
 }
 
 func (c *FakeSamplesV1alpha1) AddressableServices(namespace string) v1alpha1.AddressableServiceInterface {
-	return &FakeAddressableServices{c, namespace}
+	return newFakeAddressableServices(c, namespace)
 }
 
 func (c *FakeSamplesV1alpha1) SimpleDeployments(namespace string) v1alpha1.SimpleDeploymentInterface {
-	return &FakeSimpleDeployments{c, namespace}
+	return newFakeSimpleDeployments(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate
