@@ -19,6 +19,6 @@ set -o nounset
 set -o pipefail
 
 # shellcheck disable=SC1090
-source "$(go run knative.dev/hack/cmd/script library.sh)"
+source "$(GOFLAGS='-mod=mod' go run knative.dev/hack/cmd/script library.sh)"
 
 go_update_deps "$@"
