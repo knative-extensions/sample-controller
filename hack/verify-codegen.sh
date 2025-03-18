@@ -29,7 +29,7 @@ if ! git diff --exit-code --name-only > /dev/null; then
   error 'Difference:'
   git --no-pager diff
   abort "${MODULE_NAME} is out of date!" "" \
-    "Please, run ./hack/build.sh -c and commit."
+    "Please, run ./hack/update-codegen.sh and commit."
 fi
 
 header "${MODULE_NAME} is up to date."
