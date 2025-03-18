@@ -13,6 +13,9 @@ require (
 	knative.dev/pkg v0.0.0-20250312035536-b7bbf4be5dbd
 )
 
+// TODO: Remove after https://github.com/knative/hack/pull/420 is merged
+replace knative.dev/hack => github.com/cardil/knative-hack v0.0.0-20250318132007-52bf110a5b9b
+
 require (
 	contrib.go.opencensus.io/exporter/ocagent v0.7.1-0.20200907061046-05415f1de66d // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2 // indirect

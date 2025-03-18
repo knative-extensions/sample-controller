@@ -873,7 +873,7 @@ k8s.io/utils/net
 k8s.io/utils/pointer
 k8s.io/utils/ptr
 k8s.io/utils/trace
-# knative.dev/hack v0.0.0-20250314171439-742e1e50da78
+# knative.dev/hack v0.0.0-20250314171439-742e1e50da78 => github.com/cardil/knative-hack v0.0.0-20250318132007-52bf110a5b9b
 ## explicit; go 1.21
 knative.dev/hack
 # knative.dev/pkg v0.0.0-20250312035536-b7bbf4be5dbd
@@ -949,3 +949,4 @@ sigs.k8s.io/structured-merge-diff/v4/value
 ## explicit; go 1.12
 sigs.k8s.io/yaml
 sigs.k8s.io/yaml/goyaml.v2
+# knative.dev/hack => github.com/cardil/knative-hack v0.0.0-20250318132007-52bf110a5b9b
