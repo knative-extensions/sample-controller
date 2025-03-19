@@ -685,8 +685,8 @@ k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7 h1:hcha5B1kVACrLujCKLbr8X
 k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7/go.mod h1:GewRfANuJ70iYzvn+i4lezLDAFzvjxZYK1gn1lWcfas=
 k8s.io/utils v0.0.0-20241210054802-24370beab758 h1:sdbE21q2nlQtFh65saZY+rRM6x6aJJI8IUa1AmH/qa0=
 k8s.io/utils v0.0.0-20241210054802-24370beab758/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
-knative.dev/hack v0.0.0-20250314171439-742e1e50da78 h1:K3cI9khmEm63uwnm2S6ZFq1r/nsJFDXtUHqPnyKdnCM=
-knative.dev/hack v0.0.0-20250314171439-742e1e50da78/go.mod h1:R0ritgYtjLDO9527h5vb5X6gfvt5LCrJ55BNbVDsWiY=
+knative.dev/hack v0.0.0-20250318155814-8f599b7a828c h1:WbSdxtzL02rpfF6KNbAFnWLMCE9TFfrfD39VqgsCuOA=
+knative.dev/hack v0.0.0-20250318155814-8f599b7a828c/go.mod h1:R0ritgYtjLDO9527h5vb5X6gfvt5LCrJ55BNbVDsWiY=
 knative.dev/pkg v0.0.0-20250312035536-b7bbf4be5dbd h1:KXG6bACwjKSZcT0JxyQDVYLcDPSip+7l6sVULeITi7k=
 knative.dev/pkg v0.0.0-20250312035536-b7bbf4be5dbd/go.mod h1:OuszA8pcsXmO+Pp4QCtD10ph6tjRPFN+LrF/XgAMDb8=
 rsc.io/binaryregexp v0.2.0/go.mod h1:qTv7/COck+e2FymRvadv62gMdZztPaShugOCi3I+8D8=
