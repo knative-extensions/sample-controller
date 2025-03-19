@@ -14,6 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
+# shellcheck disable=SC1090
+source "$(GOFLAGS='-mod=mod' go run knative.dev/hack/cmd/script codegen-library.sh)"
+
 USAGE=$(cat <<EOF
 Add boilerplate.<ext>.txt to all .<ext> files missing it in a directory.
 
@@ -22,17 +29,34 @@ Usage: (from repository root)
 
 Example: (from repository root)
          ./hack/boilerplate/add-boilerplate.sh go cmd
+
+As of now, only .go files are supported.
 EOF
 )
 
-set -e
-
-if [[ -z $1 || -z $2 ]]; then
-  echo "${USAGE}"
+if [ -z "${1:-}" ] || [ -z "${2:-}" ]; then
+  error Invalid arguments
+  echo "${USAGE}" 1>&2
   exit 1
 fi
 
-grep -r -L -P "Copyright \d+ The Knative Authors" $2  \
-  | grep -P "\.$1\$" \
-  | xargs -I {} sh -c \
-  "cat hack/boilerplate/boilerplate.$1.txt {} > /tmp/boilerplate && mv /tmp/boilerplate {}"
+if ! [[ "$1" = "go" ]]; then
+  error Unsupported file extension
+  echo "${USAGE}" 1>&2
+  exit 2
+fi
+
+cnt=0
+while read -r file; do
+  if grep -q -E "^Copyright [[:digit:]]+ The Knative Authors$" "$file"; then
+    continue
+  fi
+  cat "$(boilerplate)" > "$file".bck
+  echo '' >> "$file".bck
+  cat "$file" >> "$file".bck
+  mv "$file".bck "$file"
+  log License added to "$file"
+  cnt=$(( cnt + 1))
+done < <(find "$2" -type f -name "*.$1")
+
+log License added to $cnt files

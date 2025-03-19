@@ -18,8 +18,8 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-source $(dirname $0)/../vendor/knative.dev/hack/codegen-library.sh
-export PATH="$GOBIN:$PATH"
+# shellcheck disable=SC1090
+source "$(GOFLAGS='-mod=mod' go run knative.dev/hack/cmd/script codegen-library.sh)"
 
 echo "=== Update Codegen for ${MODULE_NAME}"
 
@@ -28,23 +28,23 @@ group "Kubernetes Codegen"
 source "${CODEGEN_PKG}/kube_codegen.sh"
 
 kube::codegen::gen_client \
-  --boilerplate "${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt" \
+  --boilerplate "$(boilerplate)" \
   --output-dir "${REPO_ROOT_DIR}/pkg/client" \
   --output-pkg "knative.dev/sample-controller/pkg/client" \
   --with-watch \
   "${REPO_ROOT_DIR}/pkg/apis"
 
 kube::codegen::gen_helpers \
-  --boilerplate "${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt" \
+  --boilerplate "$(boilerplate)" \
   "${REPO_ROOT_DIR}/pkg"
 
 group "Knative Codegen"
 
 # Knative Injection
-${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh "injection" \
+"${KNATIVE_CODEGEN_PKG}/hack/generate-knative.sh" "injection" \
   knative.dev/sample-controller/pkg/client knative.dev/sample-controller/pkg/apis \
   "samples:v1alpha1" \
-  --go-header-file ${REPO_ROOT_DIR}/hack/boilerplate/boilerplate.go.txt
+  --go-header-file "$(boilerplate)"
 
 group "Update CRD Schema"
 
@@ -55,4 +55,4 @@ go run sigs.k8s.io/controller-tools/cmd/controller-gen@v0.17.1 \
 
 group "Update deps post-codegen"
 # Make sure our dependencies are up-to-date
-${REPO_ROOT_DIR}/hack/update-deps.sh
+"${REPO_ROOT_DIR}/hack/update-deps.sh"
