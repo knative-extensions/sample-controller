@@ -26,7 +26,7 @@
 export DISABLE_MD_LINTING=1
 
 # shellcheck disable=SC1090
-source "$(GOFLAGS='-mod=mod' go run knative.dev/hack/cmd/script presubmit-tests.sh)"
+source "$(go run knative.dev/hack/cmd/script presubmit-tests.sh)"
 
 # TODO(mattmoor): integration tests
 
