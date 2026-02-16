@@ -1,5 +1,5 @@
 /*
-Copyright 2025 The Knative Authors
+Copyright 2026 The Knative Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ func NewSimpleDeploymentInformer(client versioned.Interface, namespace string, r
 // one. This reduces memory footprint and number of connections to the server.
 func NewFilteredSimpleDeploymentInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
-		&cache.ListWatch{
+		cache.ToListWatcherWithWatchListSemantics(&cache.ListWatch{
 			ListFunc: func(options v1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
@@ -82,7 +82,7 @@ func NewFilteredSimpleDeploymentInformer(client versioned.Interface, namespace s
 				}
 				return client.SamplesV1alpha1().SimpleDeployments(namespace).Watch(ctx, options)
 			},
-		},
+		}, client),
 		&apissamplesv1alpha1.SimpleDeployment{},
 		resyncPeriod,
 		indexers,
