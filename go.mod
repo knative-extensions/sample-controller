@@ -3,14 +3,14 @@ module knative.dev/sample-controller
 go 1.25.0
 
 require (
-	go.uber.org/zap v1.27.1
+	go.uber.org/zap v1.28.0
 	k8s.io/api v0.35.4
 	k8s.io/apimachinery v0.35.4
 	k8s.io/client-go v0.35.4
 	k8s.io/code-generator v0.35.4
 	k8s.io/kube-openapi v0.0.0-20250910181357-589584f1c912
-	knative.dev/hack v0.0.0-20260421155212-aeb7b4a9bf96
-	knative.dev/pkg v0.0.0-20260422015212-ec452872dcc1
+	knative.dev/hack v0.0.0-20260428014158-b2a37f1b6e7b
+	knative.dev/pkg v0.0.0-20260505204821-021ad709ec68
 )
 
 require (
